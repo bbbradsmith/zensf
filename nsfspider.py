@@ -10,16 +10,30 @@ import struct
 import subprocess
 
 import py65emu.cpu
+da65 = os.path.join("cc65","bin","da65")
 
 # in_list contains rows of the form:
 #
-# [NSF filename] [song] [mm:ss] [0/1=PAL method] [0/1=loop] [arist] [track name] [shortened track name (optional)]
+# [NSF filename] [song] [mm:ss] [0-2=PAL method] [0/1=loop] [arist] [track name] [shortened track name (optional)]
+#   Fields are separated by spaces, use enclosing quotes for fields that require internal spaces (e.g. track names)
+#   [song] field starts at 1
+#   A \ in artist/track names will normally be treated as a newline.
 #
-# Fields are separated by spaces, use enclosing quotes for fields that require internal spaces (e.g. track names)
-# Also one row that starts with ORDER and followed by a list of numbers.
-# The ORDER may be used to reorder tracks without changing their packed data, etc.
-# (Tracks are numbered by their order in the file, starting with 0.)
-# (NSF "song" field starts at 1.)
+# ALLCAPS
+#   Converts artist/title texts to uppercase. (Applied before MAP.)
+#
+# MAP [symbol] [replacement]
+#   Maps occurencs of a string with its replacement string. (Useful if your title has non-ascii characters you need to remap.)
+#
+# ORDER [track #] [track #] ...
+#   May reorder the tracks differently than they are listed in the file.
+#   First track line in the file is track 1.
+#
+# #
+#   A line starting with a hash followed by a space will be treated as a comment.
+
+debug_track_skip = 0 # skips the full play/analysis of tracks below this number for faster iteration (if you don't need the mod info)
+delete_output = False # sometimes useful when iterating, will automatically delete output folders before starting
 
 in_dir = "NSF"
 in_list = "tracks.txt"
@@ -35,14 +49,9 @@ out_const = "constants.inc"
 out_nsfe = "nsfe.inc"
 
 FPS = 60
-
-da65 = os.path.join("cc65","bin","da65")
-
 NSF_TIMEOUT_INIT = 20000 * 120 # cycles allowed for INIT
 NSF_TIMEOUT_PLAY = 10000       # cycles allowed for PLAY
-
-debug_track_skip = 0 # skips the full playthrough of tracks for faster iteration if you don't need the mod info
-
+GAP = 2 # seconds to add to timer for gap
 
 
 now_string = datetime.datetime.now().strftime("%a %b %d %H:%M:%S %Y")
@@ -195,7 +204,7 @@ class NSFSpiderMMU:
             return self.ram[addr & 0x1FFF]
         elif (addr >= 0x6000) and (addr < 0x8000):
             return self.exram[addr - 0x6000]
-        elif (addr > 0x8000):
+        elif (addr >= 0x8000):
             b = (addr >> 12) - 0x8
             mo = self.banks[b]
             mb = mo >> 12
@@ -271,6 +280,11 @@ def run_nsf(nsf,song,frames):
 
 
 def verify_dir(dir):
+    if delete_output:
+        try:
+            shutil.rmtree(dir)
+        except:
+            pass
     try:
         os.stat(dir)
     except:
@@ -284,30 +298,55 @@ global result
 global binlist
 global mods
 global inc
+global order
+global allcaps
+global text_map
 result = ""
 binlist = ""
 mods = ""
 inc = ""
 order = []
+allcaps = False
+text_map = {}
+
+def text_remap(s):
+    if allcaps:
+        s = s.upper()
+    for (symbol,replacement) in text_map.items():
+        s = s.replace(symbol,replacement)
+    return s
 
 verify_dir(out_bin)
 verify_dir(out_mod)
 verify_dir(out_info)
 
-
 # 1. gather entries from in_list
 track = 0
 entries = []
+in_line_count = 0
 for line in open(os.path.join(in_dir,in_list),"rt",encoding="UTF-8").readlines():
     args = shlex.split(line)
+    in_line_count += 1
     if len(args) <= 0:
         continue
     if args[0] == "ORDER":
         for a in args[1:]:
             order.append(int(a,10))
         continue
+    elif args[0] == "ALLCAPS":
+        if len(args) != 1:
+            raise Exception("Unexpected argument after ALLCAPS. (%d)" % in_line_count)
+        allcaps = True
+        continue
+    elif args[0] == "MAP":
+        if len(args) != 3:
+            raise Exception("MAP must have two arguments. (%d)" % in_line_count)
+        if args[1] in text_map:
+            raise Exception("Duplicate MAP? \"%s\" (%d)" % (args[1], in_line_count))
+        text_map[args[1]] = args[2]
+        continue
     if len(args) < 7 or len(args) > 8:
-        raise Exception("Incorrect number of arguments:\n> " + line)
+        raise Exception(("Incorrect number of arguments. (%d)\n> " % in_line_count) + line)
     nsf_filename = os.path.join(in_dir,args[0])
     nsf_song = int(args[1])
     nsf_time = args[2].split(":")
@@ -332,7 +371,7 @@ if len(order) == 0: # default order
 s = "Order:"
 for o in order:
     s += " %02d" % o
-result += s + "\n"
+result += s + "\n\n"
 print(s)
 print()
 
@@ -342,27 +381,27 @@ analyzed = []
 for (nsf_filename, nsf_song, nsf_min, nsf_sec, nsf_pal_adjust, nsf_loop, nsf_artist, nsf_title, nsf_title_short) in entries:
     # 2.1. parse the file
     nsf = NSF.open(nsf_filename)
-    result += str(nsf)
+    result += str(nsf) + "\n"
     print(nsf)
     # 2.2. simulate the NSF
-    frames = ((nsf_min * 60) + nsf_sec + 2) * FPS
+    frames = ((nsf_min * 60) + nsf_sec + GAP) * FPS
     if track < debug_track_skip:
         frames = 5
     mmu = run_nsf(nsf,nsf_song,frames)
     # 2.3. analysis
-    if mmu.stat_exram != False:
-        raise Exception("External RAM required!")
     mod  = "Track %02d: %s\n" % (track,nsf_title)
     mod += "High ZP:    $%02X\n" % mmu.stat_highzp
     mod += "High RAM: $%04X\n" % mmu.stat_highram
+    if mmu.stat_exram != False:
+        raise Exception("External RAM required!")
+        mod += "EXTRA RAM\n"
     for b in mmu.stat_bank_f:
         mod += "BANK F: $%02X\n" % b
     for (offset,pc) in mmu.stat_bank_write:
         mod += "BANK WRITE: $%02X:$%04X\n" % (offset>>12,pc)
-    mod += "\n"
-    mods += mod
-    result += mod
     print(mod)
+    mods += mod + "\n"
+    result += mod + "\n"
     analyzed.append((nsf,mmu))
     track += 1
 
@@ -380,6 +419,7 @@ inc_play = "track_init_play:\n"
 inc_bank_offset = "track_bank_offset: ; bank location of NSF in ROM\n"
 inc_bank_start = "track_bank_start: ; starting banks for NSF\n"
 inc_bank_start += ";     8000 9000 A000 B000 C000 D000 E000 F000\n"
+inc_song = "track_song: ; song index for NSF -1\n"
 inc_pal_adjust = "track_pal_adjust: ; double every 5th frame if in PAL\n;     "
 inc_loop = "track_loop: ; whether track loops\n;     "
 inc_time = "track_time: ; time to play each track in seconds\n"
@@ -388,21 +428,33 @@ inc_artist = ""
 inc_title = ""
 inc_title_short = ""
 outbank = 0
+generated = []
+disassembled = []
 for track in range(len(analyzed)):
     (nsf_filename, nsf_song, nsf_min, nsf_sec, nsf_pal_adjust, nsf_loop, nsf_artist, nsf_title, nsf_title_short) = entries[track]
     (nsf,mmu) = analyzed[track]
     track_outbank = outbank
+    bank_f = mmu.stat_bank_f.copy()
+    bank_write = mmu.stat_bank_write.copy()
+    track_write = track
+    # check if track already present, 
+    reuse = False
+    for (r_filename, r_track, r_outbank, r_bank_f, r_bank_write) in generated:
+        if nsf_filename == r_filename:
+            if not reuse:
+                track_write = r_track # take the number of the first used track with this NSF
+                track_outbank = r_outbank
+            reuse = True
+            bank_f = bank_f.union(r_bank_f)
+            bank_write = bank_write.union(r_bank_write)
+    # export banks
     for b in range(nsf.bank_begin, nsf.bank_begin + nsf.bank_count):
         addr = -1
-        # split the banks
-        bname = "%02X_%02X" % (track,b)
-        bfile = os.path.join(out_bin,bname+".bin")
-        block = nsf.rom[b*0x1000:(b+1)*0x1000]
-        open(bfile,"wb").write(bytes(block))
+        bname = "%02X_%02X" % (track_write,b)
         # create a mod disassembly if needed
-        if b in mmu.stat_bank_f:
+        if b in bank_f:
             addr = 0xF000
-        for (pco,pc) in mmu.stat_bank_write:
+        for (pco,pc) in bank_write:
             pcb = pco >> 12
             if b == pcb:
                 pca = pc & 0xF000
@@ -410,7 +462,13 @@ for track in range(len(analyzed)):
                     addr = pca
                 elif pca != addr:
                     raise Exception("Bank modification needed in two places! " + bname)
-        if (addr >= 0):
+        # split the banks
+        bfile = os.path.join(out_bin,bname+".bin")
+        if not reuse:
+            block = nsf.rom[b*0x1000:(b+1)*0x1000]
+            open(bfile,"wb").write(bytes(block))
+        # disassemble the banks to be nodified
+        if (addr >= 0) and (bname not in disassembled):
             mfile = os.path.join(out_bin,bname+".s")
             cline = da65 + " -o %s -v --comments 4 -g -S $%04X %s" % (mfile,addr,bfile)
             result += cline + "\n"
@@ -422,16 +480,19 @@ for track in range(len(analyzed)):
             f.seek(0)
             f.write((".segment \"M%04X\"\n\n" % addr) + mtext)
             f.close()
+            disassembled.append(bname)
         binlist_entry = bname
-        binlist += binlist_entry + "\n"
-        result += binlist_entry + "\n"
-        outbank += 1
-        #print(binlist_entry)
+        if not reuse:
+            #result += binlist_entry + "\n"
+            #print(binlist_entry)
+            binlist += binlist_entry + "\n"
+            outbank += 1
+        generated.append((nsf_filename, track, track_outbank, mmu.stat_bank_f, mmu.stat_bank_write))
     # track data
     inc_init += ".word $%04X ; %02X %s\n" % (nsf.addr_init, track, nsf_title)
     inc_play += ".word $%04X ; %02X %s\n" % (nsf.addr_play, track, nsf_title)
     inc_bank_offset += ".byte $%02X - $%02X ; %02X %s\n" % (track_outbank, nsf.bank_begin, track, nsf_title)
-    start_banks = bytearray(nsf.banks[:])
+    start_banks = bytearray(nsf.banks)
     if not nsf.bankswitch:
         start_banks = [0,1,2,3,4,5,6,7]
     for i in range(8):
@@ -440,16 +501,17 @@ for track in range(len(analyzed)):
     inc_bank_start += ".byte  $%02X, $%02X, $%02X, $%02X, $%02X, $%02X, $%02X, $%02X ; %02X %s\n" % \
         (start_banks[0], start_banks[1], start_banks[2], start_banks[3], \
          start_banks[4], start_banks[5], start_banks[6], start_banks[7], track, nsf_title)
+    inc_song += ".byte %02X ; %02X %s\n" % (nsf_song-1, track, nsf_title)
     inc_pal_adjust += "%02X " % track
     inc_loop += "%02X " % track
     inc_time += ".word (%2d*60)+%2d ; %02X %s\n" % (nsf_min, nsf_sec, track, nsf_title)
     inc_order += " $%02X," % track
-    inc_artist += "track_artist_%02X: .asciiz \"%s\"\n" % (track, nsf_artist)
-    inc_title += "track_title_%02X: .asciiz \"%s\"\n" % (track, nsf_title)
+    inc_artist += "track_artist_%02X: .asciiz \"%s\"\n" % (track, text_remap(nsf_artist))
+    inc_title += "track_title_%02X: .asciiz \"%s\"\n" % (track, text_remap(nsf_title))
     if nsf_title_short == None:
         inc_title_short += "track_title_short_%02X = track_title_%02X\n" % (track, track)
     else:
-        inc_title_short += "track_title_short_%02X: .asciiz \"%s\"\n" % (track, nsf_title_short)
+        inc_title_short += "track_title_short_%02X: .asciiz \"%s\"\n" % (track, text_remap(nsf_title_short))
 
 # second pass for generated data
 inc_order += " 0\n"
@@ -474,6 +536,7 @@ inc += inc_init + "\n"
 inc += inc_play + "\n"
 inc += inc_bank_offset + "\n"
 inc += inc_bank_start + "\n"
+inc += inc_song + "\n"
 inc += inc_pal_adjust + "\n"
 inc += inc_loop + "\n"
 inc += inc_time + "\n"
