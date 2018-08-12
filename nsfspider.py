@@ -32,10 +32,10 @@ da65 = os.path.join("cc65","bin","da65")
 # #
 #   A line starting with a hash followed by a space will be treated as a comment.
 
-debug_track_skip = 0 # skips the full play/analysis of tracks below this number for faster iteration (if you don't need the mod info)
+debug_track_skip = 90 # skips the full play/analysis of tracks below this number for faster iteration (if you don't need the mod info)
 delete_output = False # sometimes useful when iterating, will automatically delete output folders before starting
 
-in_dir = "NSF"
+in_dir = "in_nsf"
 in_list = "tracks.txt"
 
 out_bin = "out_src"
@@ -469,7 +469,10 @@ for track in range(len(analyzed)):
             cline = da65 + " -o %s -v --comments 4 -g -S $%04X %s" % (mfile,addr,bfile)
             result += cline + "\n"
             print (cline)
-            subprocess.call(cline)
+            try:
+                subprocess.call(cline)
+            except:
+                raise Exception("Disassembly failure.\n> " + cline)
             # prepend .segment to the generated file
             f = open(mfile,"r+")
             mtext = f.read()
