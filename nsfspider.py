@@ -10,7 +10,6 @@ import struct
 import subprocess
 
 import py65emu.cpu
-da65 = os.path.join("cc65","bin","da65")
 
 # in_list contains rows of the form:
 #
@@ -32,7 +31,7 @@ da65 = os.path.join("cc65","bin","da65")
 # #
 #   A line starting with a hash followed by a space will be treated as a comment.
 
-debug_track_skip = 90 # skips the full play/analysis of tracks below this number for faster iteration (if you don't need the mod info)
+debug_track_skip = 0 # skips the full play/analysis of tracks below this number for faster iteration (if you don't need the mod info)
 delete_output = False # sometimes useful when iterating, will automatically delete output folders before starting
 
 in_dir = "in_nsf"
@@ -52,6 +51,8 @@ NSF_TIMEOUT_INIT = 20000 * 120 # cycles allowed for INIT
 NSF_TIMEOUT_PLAY = 10000       # cycles allowed for PLAY
 GAP = 2 # seconds to add to timer for gap
 
+da65 = os.path.join("cc65","bin","da65")
+da65_args = " -o %s -v --comments 4 -g -S $%04X %s" # % (output, address, input)
 
 now_string = datetime.datetime.now().strftime("%a %b %d %H:%M:%S %Y")
 
@@ -466,7 +467,7 @@ for track in range(len(analyzed)):
         # disassemble the banks to be nodified
         if (addr >= 0) and (bname not in disassembled):
             mfile = os.path.join(out_bin,bname+".s")
-            cline = da65 + " -o %s -v --comments 4 -g -S $%04X %s" % (mfile,addr,bfile)
+            cline = da65 + da65_args % (mfile,addr,bfile)
             result += cline + "\n"
             print (cline)
             try:
@@ -477,6 +478,7 @@ for track in range(len(analyzed)):
             f = open(mfile,"r+")
             mtext = f.read()
             f.seek(0)
+            f.write((".include \"../mod.inc\"\n)
             f.write((".segment \"M%04X\"\n\n" % addr) + mtext)
             f.close()
             disassembled.append(bname)
