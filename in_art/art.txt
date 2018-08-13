@@ -1,0 +1,12 @@
+PAL BG bg.pal
+PAL FG fg.pal
+CHR BG bg.pal
+CHR FG fg.pal
+NMT TITLE title.nam
+NMT INFO info.nam
+NMT TRACKS tracks.nam
+NMT PLAY play.nam
+SCREEN TITLE  BG FG BG FG
+SCREEN INFO   BG FG BG FG
+SCREEN TRACKS BG FG BG FG
+SCREEN PLAY   BG FG BG FG

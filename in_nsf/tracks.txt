@@ -1,0 +1,11 @@
+"brahms.nsf"       2 05:09 0 0 "Johannes Brahms" "Intermezzo (E minor)\Op. 119 No. 2" "Intermezzo 119-2"
+"debussy.nsf"      1 03:03 2 0 "Claude Debussy" "Prélude"
+"brahms.nsf"       1 02:50 0 0 "Johannes Brahms" "Intermezzo (A minor)\Op. 76 No. 7" "Intermezzo 76-7"
+"debussy.nsf"      2 03:08 2 0 "Claude Debussy" "Menuet"
+"debussy.nsf"      4 03:33 2 0 "Claude Debussy" "Passepied"
+"sundried.nsf"     1 01:44 1 0 "bradsmith" "Sundied"
+"debussy.nsf"      3 03:26 2 0 "Claude Debussy" "Clair de Lune"
+
+ORDER 2 4 7 5 6 3 1
+# ALLCAPS
+MAP "é" "|"
