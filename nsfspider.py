@@ -3,6 +3,7 @@ import sys
 assert sys.version_info[0] >= 3, "Python 3 required."
 
 import datetime
+import glob
 import os
 import shlex
 import shutil
@@ -11,39 +12,39 @@ import subprocess
 
 import py65emu.cpu
 
-# in_list contains rows of the form:
+# nsfspider.py
 #
-# [NSF filename] [song] [mm:ss] [0-2=PAL method] [0/1=loop] [arist] [track name] [shortened track name (optional)]
-#   Fields are separated by spaces, use enclosing quotes for fields that require internal spaces (e.g. track names)
-#   [song] field starts at 1
-#   A \ in artist/track names will normally be treated as a newline.
+# This program executes and analyzes a collection of NSF files.
+# The NSF bank data is exporeted
 #
-# ALLCAPS
-#   Converts artist/title texts to uppercase. (Applied before MAP.)
+# Input:
+# /in_nsf/*.nsf
+# /in_nsf/tracks.txt
 #
-# MAP [symbol] [replacement]
-#   Maps occurencs of a string with its replacement string. (Useful if your title has non-ascii characters you need to remap.)
+# Output:
+# /out_src/*.bin
+# /out_src/*.s
+# /out_info/binlist.txt
+# /out_info/modlist.txt
+# /out_info/tracks.inc
+# /out_info/nsfspider.txt
 #
-# ORDER [track #] [track #] ...
-#   May reorder the tracks differently than they are listed in the file.
-#   First track line in the file is track 1.
-#
-# #
-#   A line starting with a hash followed by a space will be treated as a comment.
+# See tracks.txt for information.
 
 debug_track_skip = 0 # skips the full play/analysis of tracks below this number for faster iteration (if you don't need the mod info)
-delete_output = False # sometimes useful when iterating, will automatically delete output folders before starting
+delete_output = True # delete output files before beginning
 
 in_dir = "in_nsf"
 in_list = "tracks.txt"
 
-out_bin = "out_src"
-out_mod = "out_mod"
-out_info = "out_info"
+out_dir_bin = "out_src"
+out_dir_mod = "out_mod"
+out_dir_info = "out_info"
+
 out_binlist = "binlist.txt"
 out_modlist = "modlist.txt"
-out_result = "result.txt"
-out_inc = "tables.inc"
+out_result = "nsfspider.txt"
+out_inc = "tracks.inc"
 out_nsfe = "nsfe.inc"
 
 FPS = 60
@@ -56,11 +57,11 @@ da65_args = " -o %s -v --comments 4 -g -S $%04X %s" # % (output, address, input)
 
 now_string = datetime.datetime.now().strftime("%a %b %d %H:%M:%S %Y")
 
-DEBUG = False
+DEBUG = True
+
 def debug(message):
     if DEBUG:
         print (message)
-
 
 class NSF:
     '''Parses an NSF file and unpack its ROM data.'''
@@ -185,6 +186,8 @@ class NSFSpiderMMU:
             self.stat_highram = max(self.stat_highram, addr)
             if (addr < 0x100):
                 self.stat_highzp = max(self.stat_highzp, addr)
+            if (addr == 0x100):
+                raise Exception("Write to stack at $100. Overflow?")
         elif (addr >= 0x5FF8) and (addr < 0x6000):
             if not self.nsf.bankswitch:
                 raise Exception("Banskwitching in non-bankswitched NSF.")
@@ -259,9 +262,8 @@ def execute(cpu, addr, timeout):
         cpu.step()
         cycles -= cpu.cc
         if cpu.mmu.brk:
-            cpu.r.setFlag('I') # py65emu seems to think BRK clear I?
             break
-        elif (cpu.r.p & 4) == 0:
+        if (cpu.r.p & 4) == 0:
             raise Exception("NSF has enabled IRQ!")
     if cycles < 0:
         raise Exception("Subroutine at $%04X exceeded %d instructions!")
@@ -280,11 +282,6 @@ def run_nsf(nsf,song,frames):
 
 
 def verify_dir(dir):
-    if delete_output:
-        try:
-            shutil.rmtree(dir)
-        except:
-            pass
     try:
         os.stat(dir)
     except:
@@ -316,9 +313,39 @@ def text_remap(s):
         s = s.replace(symbol,replacement)
     return s
 
-verify_dir(out_bin)
-verify_dir(out_mod)
-verify_dir(out_info)
+if delete_output:
+    s = "Removing files."
+    result += s + "\n"
+    print(s)
+    def rm(filename):
+        if '*' in filename:
+            #debug("removing glob: " + filename)
+            for f in glob.glob(filename):
+                rm(f)
+            return
+        #debug("rm: " + filename)
+        try:
+            os.remove(filename)
+            s = "removed: " + filename
+            global result
+            result += s + "\n"
+            print(s)
+        except:
+            #debug("not removed: " + filename)
+            pass
+    rm(os.path.join(out_dir_bin,"*.s"))
+    rm(os.path.join(out_dir_bin,"*.bin"))
+    rm(os.path.join(out_dir_info,out_binlist))
+    rm(os.path.join(out_dir_info,out_modlist))
+    rm(os.path.join(out_dir_info,out_result))
+    rm(os.path.join(out_dir_info,out_inc))
+    rm(os.path.join(out_dir_info,out_nsfe))
+    result += "\n"
+    print()
+
+verify_dir(out_dir_bin)
+verify_dir(out_dir_mod)
+verify_dir(out_dir_info)
 
 # gather entries from in_list
 track = 0
@@ -344,6 +371,8 @@ for line in open(os.path.join(in_dir,in_list),"rt",encoding="UTF-8").readlines()
         if args[1] in text_map:
             raise Exception("Duplicate MAP? \"%s\" (%d)" % (args[1], in_line_count))
         text_map[args[1]] = args[2]
+        continue
+    elif args[0] == "#":
         continue
     if len(args) < 7 or len(args) > 8:
         raise Exception(("Incorrect number of arguments. (%d)\n> " % in_line_count) + line)
@@ -378,6 +407,8 @@ print()
 # analyze NSFs
 track = 0
 analyzed = []
+highest_zp = 0
+highest_ram = 0
 for (nsf_filename, nsf_song, nsf_min, nsf_sec, nsf_pal_adjust, nsf_loop, nsf_artist, nsf_title, nsf_title_short) in entries:
     # 2.1. parse the file
     nsf = NSF.open(nsf_filename)
@@ -399,6 +430,8 @@ for (nsf_filename, nsf_song, nsf_min, nsf_sec, nsf_pal_adjust, nsf_loop, nsf_art
         mod += "BANK F: $%02X\n" % b
     for (offset,pc) in mmu.stat_bank_write:
         mod += "BANK WRITE: $%02X:$%04X\n" % (offset>>12,pc)
+    highest_zp = max(mmu.stat_highzp, highest_zp)
+    highest_ram = max(mmu.stat_highram, highest_ram)
     print(mod)
     mods += mod + "\n"
     result += mod + "\n"
@@ -423,6 +456,12 @@ inc_order = "track_order:\n.byte"
 inc_artist = ""
 inc_title = ""
 inc_title_short = ""
+
+inc += "TRACK_LENGTH       = %d\n" % len(entries)
+inc += "TRACK_ORDER_LENGTH = %d\n" % len(order)
+inc += "TRACK_HIGH_ZP      = $%02X\n" % highest_zp
+inc += "TRACK_HIGH_RAM     = $%04X\n" % highest_ram
+inc += "\n"
 
 outbank = 0
 generated = []
@@ -460,13 +499,13 @@ for track in range(len(analyzed)):
                 elif pca != addr:
                     raise Exception("Bank modification needed in two places! " + bname)
         # split the banks
-        bfile = os.path.join(out_bin,bname+".bin")
+        bfile = os.path.join(out_dir_bin,bname+".bin")
         if not reuse:
             block = nsf.rom[b*0x1000:(b+1)*0x1000]
             open(bfile,"wb").write(bytes(block))
         # disassemble the banks to be nodified
         if (addr >= 0) and (bname not in disassembled):
-            mfile = os.path.join(out_bin,bname+".s")
+            mfile = os.path.join(out_dir_bin,bname+".s")
             cline = da65 + da65_args % (mfile,addr,bfile)
             result += cline + "\n"
             print (cline)
@@ -478,7 +517,7 @@ for track in range(len(analyzed)):
             f = open(mfile,"r+")
             mtext = f.read()
             f.seek(0)
-            f.write((".include \"../mod.inc\"\n)
+            f.write(".include \"../mod.inc\"\n")
             f.write((".segment \"M%04X\"\n\n" % addr) + mtext)
             f.close()
             disassembled.append(bname)
@@ -490,6 +529,7 @@ for track in range(len(analyzed)):
             outbank += 1
         generated.append((nsf_filename, track, track_outbank, mmu.stat_bank_f, mmu.stat_bank_write))
     # track data
+    bank_add = (track_outbank - nsf.bank_begin) & 0xFF
     inc_init += ".word $%04X ; %02X %s\n" % (nsf.addr_init, track, nsf_title)
     inc_play += ".word $%04X ; %02X %s\n" % (nsf.addr_play, track, nsf_title)
     inc_bank_offset += ".byte $%02X - $%02X ; %02X %s\n" % (track_outbank, nsf.bank_begin, track, nsf_title)
@@ -497,8 +537,9 @@ for track in range(len(analyzed)):
     if not nsf.bankswitch:
         start_banks = [0,1,2,3,4,5,6,7]
     for i in range(8):
+        # replace any unused banks with $FF
         if start_banks[i] < nsf.bank_begin or start_banks[i] > nsf.bank_end:
-            start_banks[i] = 0xFF
+            start_banks[i] = (0xFF - bank_add) & 0xFF
     inc_bank_start += ".byte  $%02X, $%02X, $%02X, $%02X, $%02X, $%02X, $%02X, $%02X ; %02X %s\n" % \
         (start_banks[0], start_banks[1], start_banks[2], start_banks[3], \
          start_banks[4], start_banks[5], start_banks[6], start_banks[7], track, nsf_title)
@@ -515,7 +556,6 @@ for track in range(len(analyzed)):
         inc_title_short += "track_title_short_%02X: .asciiz \"%s\"\n" % (track, text_remap(nsf_title_short))
 
 inc_order += " 0\n"
-inc_order += "ORDER_LENGTH = %d\n" % len(order)
     
 # second pass for generated data
 inc_pal_adjust += "end\n.byte "
@@ -572,9 +612,9 @@ nsfe += nsfe_tlbl + "\n"
 nsfe += "; end of file\n"
 
 # end
-open(os.path.join(out_info,out_inc    ),"wt").write(inc)
-open(os.path.join(out_info,out_nsfe   ),"wt").write(nsfe)
-open(os.path.join(out_info,out_binlist),"wt").write(binlist)
-open(os.path.join(out_info,out_modlist),"wt").write(mods)
-open(os.path.join(out_info,out_result ),"wt").write(result)
+open(os.path.join(out_dir_info,out_inc    ),"wt").write(inc)
+open(os.path.join(out_dir_info,out_nsfe   ),"wt").write(nsfe)
+open(os.path.join(out_dir_info,out_binlist),"wt").write(binlist)
+open(os.path.join(out_dir_info,out_modlist),"wt").write(mods)
+open(os.path.join(out_dir_info,out_result ),"wt").write(result)
 print("Finished!")

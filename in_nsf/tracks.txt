@@ -9,3 +9,21 @@
 ORDER 2 4 7 5 6 3 1
 # ALLCAPS
 MAP "é" "|"
+
+# [NSF filename] [song] [mm:ss] [0-2=PAL method] [0/1=loop] [arist] [track name] [shortened track name (optional)]
+#   Fields are separated by spaces, use enclosing quotes for fields that require internal spaces (e.g. track names)
+#   [song] field starts at 1
+#   A \ in artist/track names will normally be treated as a newline.
+#
+# ALLCAPS
+#   Converts artist/title texts to uppercase. (Applied before MAP.)
+#
+# MAP [symbol] [replacement]
+#   Maps occurencs of a string with its replacement string. (Useful if your title has non-ascii characters you need to remap.)
+#
+# ORDER [track #] [track #] ...
+#   May reorder the tracks differently than they are listed in the file.
+#   First track line in the file is track 1.
+#
+# #
+#   A line starting with a hash followed by a space will be treated as a comment.
