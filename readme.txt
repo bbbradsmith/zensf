@@ -19,6 +19,13 @@ Instructions:
     2.2.5. out_info/tracks.inc - track data tables
     2.2.6. out_info/nsfe.inc - NSFe data tables
     2.2.7. out_info/nsfspider_result.txt - diagnostic output
+  Note: this may take a few minutes to analyze the NSFs.
+    In nsfspider.py, debug_track_skip can be used for faster iteration.
+    All of the data will still be valid, but it will fail to identify some mods:
+    - modlist.txt will be incomplete.
+    - Some disassemblies will not be produced.
+    This is OK if you've already identified the mods previously.
+    (The contents of out_mod are not touched.)
 
 3. Prepare modified banks.
   3.1. Copy disassembled .s files from /out_src to /out_mod
@@ -41,11 +48,12 @@ Instructions:
    5.2.1. /out_info/art.inc
    5.2.2. /out_info/screen.inc
    5.2.3. /out_info/build.inc
-   5.2.4. /out_mod/*.bin
-   5.2.5. /out_info/nsfs.inc
-   5.2.6. /out_info/package.txt
-   5.2.7. /out_build/*.o (temporary)
-   5.2.8. /out_build/command_temp.txt (temporary)
+   5.2.4. /out_info/strings.inc
+   5.2.5. /out_mod/*.bin
+   5.2.6. /out_info/nsfs.inc
+   5.2.7. /out_info/package.txt
+   5.2.8. /out_build/*.o (temporary)
+   5.2.9. /out_build/command_temp.txt (temporary)
 
 6. Prepare custom stuff?
 7. Build the final stuff?

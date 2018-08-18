@@ -7,6 +7,10 @@ ZP $F0
 RAM $500
 BANKS 32
 
+NSF_TITLE "ZENSF Test"
+NSF_ARTIST "bradsmith"
+NSF_COPYRIGHT "github.com/bbbradsmith/zensf"
+
 # SCREEN [Name] [nametable] [chr0] [chr1] [pal0] [pal1]
 #   A screen is a combination of nametable, CHR, and palettes.
 #   Up to 256 different source files can be used.
@@ -20,6 +24,11 @@ BANKS 32
 #
 # BANKS [count]
 #   Power of 2, up to 256, gives the count of 4k banks.
+#
+# NSF_TITLE [title]
+# NSF_ARTIST [artist]
+# NSF_COPYRIGHT [copyright]
+#   Strings to identify the NSF. Maximum 32 characters long for NSF, unlimited for NSFe.
 #
 # #
 #   A line starting with a hash followed by a space will be treated as a comment.

@@ -21,8 +21,10 @@
 
 .export ramp_play      ; will call INIT, enable NMI, then enter playing until ramp_play_exit
 .export ramp_nmi
-.export ramp_reset
 .export ramp_irq
+.export ramp_reset
+.export ramp_nsf_init
+.export ramp_nsf_play
 
 .export sta_5FF8       ; mod replacement for STA $5FF8
 .export sta_5FF9
@@ -49,7 +51,6 @@
 .export ramp_play_exit ; 1 = exit from ramp_play loop
 
 .import base_nmi
-.importzp BASE_BANK
 
 .include "out_info/build.inc"
 
@@ -74,27 +75,7 @@ ramp_play:
 	; swap out BASE bank
 	lda bank_8000
 	sta $5FF8
-	; call NSF INIT
-	lda nsf_init_a
-	ldx nsf_init_x
-	ldy #0
-	jsr do_nsf_init
-	lda nsf_adjust
-	cmp #2 
-	bne :+
-		; FT pitch adjust hack:
-		;   On FT, the pitch table pointer usually resides at $12.
-		;   PAL pitch table is 192 bytes past the NTSC pitch table
-		lda $12
-		clc
-		adc #<192
-		sta $12
-		lda $13
-		adc #>192
-		sta $13
-		lda #1
-		sta nsf_adjust
-	:
+	jsr ramp_nsf_init
 	; enable NMI to play music
 	bit $2002
 	lda #%10001000
@@ -119,18 +100,61 @@ ramp_nmi:
 	; 
 	lda ramp_nmi_now
 	bne @skip
-	lda #1
-	sta ramp_nmi_now
-	; call base_nmi
-	lda #BASE_BANK
-	sta $5FF8
-	.assert (base_nmi >= $8000 && base_nmi < $9000), error, "base_nmi must be in $8000 bank"
-	jsr base_nmi
-	lda nsf_playing
-	beq @skip
+		lda #1
+		sta ramp_nmi_now
+		; call base_nmi
+		lda #BANK_BASE
+		sta $5FF8
+		.assert (base_nmi >= $8000 && base_nmi < $9000), error, "base_nmi must be in $8000 bank"
+		jsr base_nmi
+		lda nsf_playing
+		beq @skip
+		lda bank_8000
+		sta $5FF8
+		jsr ramp_nsf_play
+		lda #0
+		sta ramp_nmi_now
+	@skip:
+	pla
+	tay
+	pla
+	tax
+	pla
+	; rti
+ramp_irq:
+	rti
+
+ramp_reset:
+	lda #$FF
+	sta $5FFF
+	jmp ($FFFC)
+
+ramp_nsf_init:
+	; call NSF INIT
+	lda nsf_init_a
+	ldx nsf_init_x
+	ldy #0
+	jsr do_nsf_init
+	lda nsf_adjust
+	cmp #2 
+	bne :+
+		; FT pitch adjust hack:
+		;   On FT, the pitch table pointer usually resides at $12.
+		;   PAL pitch table is 192 bytes past the NTSC pitch table
+		lda $12
+		clc
+		adc #<192
+		sta $12
+		lda $13
+		adc #>192
+		sta $13
+		lda #1
+		sta nsf_adjust
+	:
+	rts
+
+ramp_nsf_play:
 	; call NSF PLAY
-	lda bank_8000
-	sta $5FF8
 	lda #0
 	sta nsf_playing
 	jsr do_nsf_play
@@ -145,22 +169,7 @@ ramp_nmi:
 		lda #1
 		sta nsf_adjust
 	:
-	lda #0
-	sta ramp_nmi_now
-@skip:
-	pla
-	tay
-	pla
-	tax
-	pla
-	; rti
-ramp_irq:
-	rti
-
-ramp_reset:
-	lda #$FF
-	sta $5FFF
-	jmp ($FFFC)
+	rts
 
 ; trampolines for playback/init
 
