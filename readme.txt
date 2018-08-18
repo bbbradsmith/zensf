@@ -55,8 +55,11 @@ Instructions:
    5.2.8. /out_build/*.o (temporary)
    5.2.9. /out_build/command_temp.txt (temporary)
 
-6. Prepare custom stuff?
-7. Build the final stuff?
+6. Build NSF with build_nsf.bat
+
+7. NSFe?
+8. Prepare custom stuff?
+9. Build the final stuff?
 
 This isn't finished.
 
