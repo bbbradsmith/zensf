@@ -40,6 +40,8 @@
 .export bank_B000
 
 ; ramp_play parameters
+.export nsf_init
+.export nsf_play
 .export nsf_init_a     ; NSF song
 .export nsf_init_x     ; 0/1 = NTSC/PAL mode
 .export nsf_adjust     ; 0 = none, 1 = double every 5th frame, 2 = FT PAL pitch adjust hack + double 5th
@@ -49,12 +51,16 @@
 .import base_nmi
 .importzp BASE_BANK
 
+.include "out_info/build.inc"
+
 .segment "RAMP_RAM"
 bank_add:       .res 1
 bank_8000:      .res 1
 bank_9000:      .res 1
 bank_A000:      .res 1
 bank_B000:      .res 1
+nsf_init:       .res 2
+nsf_play:       .res 2
 nsf_init_a:     .res 1
 nsf_init_x:     .res 1
 nsf_adjust:     .res 1 
@@ -65,7 +71,7 @@ ramp_play_exit: .res 1
 .segment "RAMP_CODE"
 
 ramp_play:
-	; swap out PLAYER segment
+	; swap out BASE bank
 	lda bank_8000
 	sta $5FF8
 	; call NSF INIT
@@ -99,8 +105,8 @@ ramp_play:
 	; disable NMI to stop playing
 	lda #0
 	sta $2000
-	; return to PLAYER segment
-	lda #BANK_PLAYER
+	; return to BASE bank
+	lda #BANK_BASE
 	sta $5FF8
 	rts
 
@@ -116,7 +122,7 @@ ramp_nmi:
 	lda #1
 	sta ramp_nmi_now
 	; call base_nmi
-	lda #BANK_PLAYER
+	lda #BASE_BANK
 	sta $5FF8
 	.assert (base_nmi >= $8000 && base_nmi < $9000), error, "base_nmi must be in $8000 bank"
 	jsr base_nmi
@@ -153,16 +159,16 @@ ramp_irq:
 
 ramp_reset:
 	lda #$FF
-	sta #$5FFF
+	sta $5FFF
 	jmp ($FFFC)
 
 ; trampolines for playback/init
 
-do_nsf_play:
-	jmp (play_addr)
-
 do_nsf_init:
-	jmp (init_addr)
+	jmp (nsf_init)
+
+do_nsf_play:
+	jmp (nsf_play)
 
 ; STA ABS bank switching
 ; (add more of these if needed for STX, STY, indexed, etc.)

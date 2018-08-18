@@ -3,23 +3,19 @@ SCREEN Info    info.nam    bg.chr  fg.chr  bg.pal  fg.pal
 SCREEN Tracks  tracks.nam  bg.chr  fg.chr  bg.pal  fg.pal
 SCREEN Play    play.nam    bg.chr  fg.chr  bg.pal  fg.pal
 
-FILENAME zensf
-ZP_LOW $F0
-RAM_LOW $500
-BANKS 256
+ZP $F0
+RAM $500
+BANKS 32
 
 # SCREEN [Name] [nametable] [chr0] [chr1] [pal0] [pal1]
 #   A screen is a combination of nametable, CHR, and palettes.
 #   Up to 256 different source files can be used.
 #   Nametables must be 1k. CHR 4k. Palettes 16 bytes.
 #
-# FILENAME [name]
-#   Filename base for .NES, .NSF, and .NSFe build.
-#
-# ZP_LOW [address]
+# ZP [address]
 #   Lowest Zero Page address to use. Everything below this the NSFs are allowed to use.
 #
-# RAM_LOW [address]
+# RAM [address]
 #   Lowest RAM address to use. Everything below this the NSFs are allowed to use.
 #
 # BANKS [count]

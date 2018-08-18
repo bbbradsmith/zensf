@@ -9,6 +9,7 @@
 ORDER 2 4 7 5 6 3 1
 # ALLCAPS
 MAP "é" "|"
+GAP 2
 
 # [NSF filename] [song] [mm:ss] [0-2=PAL method] [0/1=loop] [arist] [track name] [shortened track name (optional)]
 #   Fields are separated by spaces, use enclosing quotes for fields that require internal spaces (e.g. track names)
@@ -24,6 +25,9 @@ MAP "é" "|"
 # ORDER [track #] [track #] ...
 #   May reorder the tracks differently than they are listed in the file.
 #   First track line in the file is track 1.
+#
+# GAP [seconds]
+#   Seconds appended to each track as a gap.
 #
 # #
 #   A line starting with a hash followed by a space will be treated as a comment.
