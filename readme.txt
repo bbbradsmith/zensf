@@ -53,6 +53,10 @@ Instructions:
 This isn't finished.
 
 
-TODO - document dependencies:
-cc65
-py65emu
+Dependencies:
+
+cc65 - place in cc65/ folder
+http://cc65.github.io/cc65/
+
+py65emu - already included in py65emu/
+https://github.com/docmarionum1/py65emu
