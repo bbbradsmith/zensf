@@ -72,6 +72,11 @@ pdst: .res 2
 .import nsf_adjust
 .import nsf_playing
 
+; exports for nsfe.s
+.export stub_init
+.exportzp TRACK_ORDER_LENGTH
+
+; dummy NMI for ramp.s
 .export base_nmi
 base_nmi:
 	rts
