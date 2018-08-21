@@ -403,6 +403,11 @@ result += s + "\n\n"
 print(s)
 print()
 
+if len(entries) > 32:
+    raise Exception("Too many tracks (%d), only 32 supported." % len(entries))
+    # The main limiting factor here is how the starting bank data is fetched.
+    # Look for uses of track_bank_start if you want to increase this limit.
+
 # analyze NSFs
 track = 0
 analyzed = []
@@ -612,9 +617,9 @@ nsfe += nsfe_tlbl + "\n"
 nsfe += "; end of file\n"
 
 # end
-open(os.path.join(out_dir_info,out_inc    ),"wt").write(inc)
-open(os.path.join(out_dir_info,out_nsfe   ),"wt").write(nsfe)
-open(os.path.join(out_dir_info,out_binlist),"wt").write(binlist)
-open(os.path.join(out_dir_info,out_modlist),"wt").write(mods)
-open(os.path.join(out_dir_info,out_result ),"wt").write(result)
+open(os.path.join(out_dir_info,out_inc    ),"wt",encoding="UTF-8").write(inc)
+open(os.path.join(out_dir_info,out_nsfe   ),"wt",encoding="UTF-8").write(nsfe)
+open(os.path.join(out_dir_info,out_binlist),"wt",encoding="UTF-8").write(binlist)
+open(os.path.join(out_dir_info,out_modlist),"wt",encoding="UTF-8").write(mods)
+open(os.path.join(out_dir_info,out_result ),"wt",encoding="UTF-8").write(result)
 print("Finished!")

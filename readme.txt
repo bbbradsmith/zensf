@@ -7,7 +7,7 @@ https://github.com/bbbradsmith/eznsf
 Instructions:
 
 1. Place NSFs in /in_nsf folder, edit tracks.txt to build the track list
-2. Run nsfspider.py to build /in_nsf/tracks.txt and work through any exceptions you get.
+2. Run nsfspider.py to build /in_nsf/tracks.txt and work through any exceptions you get
   2.1. Input:
     2.1.1. /in_nsf/tracks.txt
     2.1.2. /in_nsf/*.nsf - if named in tracks.txt
@@ -30,11 +30,11 @@ Instructions:
 3. Prepare modified banks.
   3.1. Copy disassembled .s files from /out_src to /out_mod
   3.2. Review /out_info/modlist.txt for things you need to modify:
-    3.2.1. Any bank F: comment out last 6 bytes and replace with VECTORS macro.
-    3.2.2. Any bankswitch write needs to be replaced.
-  3.3. Any extra banks needed can be manually added to binlist.txt.
-4. Place nmt/chr/pal art files in /in_art folder, edit art.txt to provide an art list and other build paramters.
-5. Run package.py to build /out_mod and /in_art and work through any exceptions you get.
+    3.2.1. Any bank F: comment out last 6 bytes and replace with VECTORS macro
+    3.2.2. Any bankswitch write needs to be replaced
+  3.3. Any extra banks needed can be manually added to binlist.txt
+4. Place nmt/chr/pal art files in /in_art folder, edit art.txt to provide an art list and other build paramters
+5. Run package.py to build /out_mod and /in_art and work through any exceptions you get
    5.1. Input:
    5.1.1. /in_art/art.txt
    5.1.2. /out_info/binlist.txt
@@ -56,10 +56,13 @@ Instructions:
    5.2.9. /out_build/command_temp.txt (temporary)
 
 6. Build NSF with build_nsf.bat
+7. Build NSFe with build_nsfe.bat (test this and/or the NSF to verify that everything done so far is correct)
 
-7. NSFe?
+
 8. Prepare custom stuff?
 9. Build the final stuff?
+
+All input text files will be interpreted as UTF-8.
 
 This isn't finished.
 

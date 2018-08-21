@@ -140,7 +140,7 @@ if delete_output:
 # parse art.txt
 
 in_line_count = 0
-for line in open(os.path.join(dir_art,in_art)).readlines():   
+for line in open(os.path.join(dir_art,in_art),"rt",encoding="UTF-8").readlines():   
     args = shlex.split(line)
     in_line_count += 1
     if len(args) <= 0:
@@ -192,7 +192,7 @@ print(s)
 
 # parse binlist.txt
 in_line_count = 0
-for line in open(os.path.join(dir_info,in_bins)).readlines():   
+for line in open(os.path.join(dir_info,in_bins),"rt",encoding="UTF-8").readlines():   
     args = shlex.split(line)
     in_line_count += 1
     if len(args) <= 0:
@@ -269,7 +269,7 @@ for pal in art_pal:
     art_count += 1
 art += "\n"
 art += "; end of file\n"
-open(os.path.join(dir_info,out_art),"wt").write(art)
+open(os.path.join(dir_info,out_art),"wt",encoding="UTF-8").write(art)
 
 if art_count > 128:
     raise Exception("Art file count may not be more than 128. (%d)" % art_count)
@@ -306,7 +306,7 @@ screen += screen_enum + "\n"
 screen += screen_table + "\n"
 screen += screen_art + "\n"
 screen += "; end of file\n"
-open(os.path.join(dir_info,out_screen),"wt").write(screen)
+open(os.path.join(dir_info,out_screen),"wt",encoding="UTF-8").write(screen)
 
 s  = "ART SIZE: $%X bytes in %d files\n" % (art_size, art_count)
 s += "SCREENS: %d\n" % len(screens)
@@ -319,7 +319,7 @@ s += ".define NSF_ARTIST \"" + nsf_artist + "\"\n"
 s += ".define NSF_COPYRIGHT \"" + nsf_copyright + "\"\n"
 s += "\n"
 s += "; end of file\n"
-open(os.path.join(dir_info,out_strings),"wt").write(s)
+open(os.path.join(dir_info,out_strings),"wt",encoding="UTF-8").write(s)
 
 s  = "NSF_TITLE \"" + nsf_title + "\"\n"
 s += "NSF_ARTIST \"" + nsf_artist + "\"\n"
@@ -358,7 +358,7 @@ inc += "ZP_LOW    = $%02X\n" % zp
 inc += "RAM_LOW   = $%04X\n" % ram
 inc += "\n"
 inc += "; end of file\n"
-open(os.path.join(dir_info,out_build),"wt").write(inc)
+open(os.path.join(dir_info,out_build),"wt",encoding="UTF-8").write(inc)
 
 # build ramp.s to use with mods
 
@@ -408,8 +408,8 @@ nsfs += "\n"
 result += "\n"
 print()
 nsfs += "; end of file\n"
-open(os.path.join(dir_info,out_nsfs),"wt").write(nsfs)
+open(os.path.join(dir_info,out_nsfs),"wt",encoding="UTF-8").write(nsfs)
 
 #end
-open(os.path.join(dir_info,out_result ),"wt").write(result)
+open(os.path.join(dir_info,out_result ),"wt",encoding="UTF-8").write(result)
 print("Finished!")
