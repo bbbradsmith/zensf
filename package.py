@@ -141,11 +141,12 @@ if delete_output:
 
 in_line_count = 0
 for line in open(os.path.join(dir_art,in_art),"rt",encoding="UTF-8").readlines():   
-    args = shlex.split(line)
+    try:
+        args = shlex.split(line,comments=True)
+    except Exception as e:
+        raise Exception(("Parsing error. (%d)\n" % in_line_count) + str(e) + "\n>" + line)
     in_line_count += 1
     if len(args) <= 0:
-        continue
-    elif args[0] == "#":
         continue
     elif args[0] == "SCREEN":
         if len(args) != 7:

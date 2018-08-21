@@ -7,6 +7,7 @@
 .include "out_info/nsfs.inc"
 BANK_STUB = BANK_ART
 
+; used by cfg
 .export ZP_LOW : abs
 .export RAM_LOW : abs
 .export BANK_STUB : abs
@@ -108,7 +109,7 @@ stub_init:
 		beq :+
 			dex ; X=0 if adjust 1/2
 		:
-		stx nsf_init_x ; adjust 0 = play as PAL, 1/2 = play as NTSC
+		stx nsf_init_x ; adjust 0 = play as PAL (x=1), 1/2 = play as NTSC (x=0)
 		jmp @init_x_set
 		;
 	@init_x_ntsc:
@@ -161,8 +162,7 @@ stub_init:
 	clc
 	adc bank_add
 	sta bank_8000 ; defer this bankswitch for a moment
-	; run stub_finish from RAM
-	jmp stub_finish
+	jmp stub_finish ; run stub_finish from RAM
 
 .import __RAMP_CODE_LOAD__
 .import __RAMP_CODE_RUN__

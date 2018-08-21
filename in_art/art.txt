@@ -31,4 +31,4 @@ NSF_COPYRIGHT "github.com/bbbradsmith/zensf"
 #   Strings to identify the NSF. Maximum 32 characters long for NSF, unlimited for NSFe.
 #
 # #
-#   A line starting with a hash followed by a space will be treated as a comment.
+#   Text following a # will be treated as a comment until the end of line.

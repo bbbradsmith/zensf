@@ -139,15 +139,15 @@ ramp_nsf_init:
 	cmp #2 
 	bne :+
 		; FT pitch adjust hack:
-		;   On FT, the pitch table pointer usually resides at $12.
+		;   On FT, the pitch table pointer usually resides at $0C.
 		;   PAL pitch table is 192 bytes past the NTSC pitch table
-		lda $12
+		lda $0C
 		clc
 		adc #<192
-		sta $12
-		lda $13
+		sta $0C
+		lda $0D
 		adc #>192
-		sta $13
+		sta $0D
 		lda #1
 		sta nsf_adjust
 	:

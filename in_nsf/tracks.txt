@@ -1,10 +1,10 @@
 "brahms.nsf"       2 05:09 0 0 "Johannes Brahms" "Intermezzo (E minor)\Op. 119 No. 2" "Intermezzo 119-2"
-"debussy.nsf"      1 03:03 2 0 "Claude Debussy" "Prélude"
+"debussy.nsf"      1 03:03 1 0 "Claude Debussy" "Prélude"
 "brahms.nsf"       1 02:50 0 0 "Johannes Brahms" "Intermezzo (A minor)\Op. 76 No. 7" "Intermezzo 76-7"
-"debussy.nsf"      2 03:08 2 0 "Claude Debussy" "Menuet"
-"debussy.nsf"      4 03:33 2 0 "Claude Debussy" "Passepied"
-"sundried.nsf"     1 01:44 1 0 "bradsmith" "Sundied"
-"debussy.nsf"      3 03:26 2 0 "Claude Debussy" "Clair de Lune"
+"debussy.nsf"      2 03:08 1 0 "Claude Debussy" "Menuet"
+"debussy.nsf"      4 03:33 1 0 "Claude Debussy" "Passepied"
+"sundried.nsf"     1 01:44 2 1 "bradsmith" "Sundried"
+"debussy.nsf"      3 03:26 1 0 "Claude Debussy" "Clair de Lune"
 
 ORDER 2 4 7 5 6 3 1
 # ALLCAPS
@@ -14,6 +14,12 @@ GAP 2
 # [NSF filename] [song] [mm:ss] [0-2=PAL method] [0/1=loop] [arist] [track name] [shortened track name (optional)]
 #   Fields are separated by spaces, use enclosing quotes for fields that require internal spaces (e.g. track names)
 #   [song] field starts at 1
+#   [PAL method]
+#     0 PAL will INIT with X=1 (dual mode NSF)
+#     1 PAL will INIT with X=0, 5/6 frame doubling (pitch is naturally lowered, tuned DPCM will not work)
+#     2 Like 1 but with a workaround to manually switch the pitch table (tuned DPCM will work, Famitracker only)
+#     - All tracks are assumed NTSC capable, there is no adjustment method for PAL to NTSC
+#     - Dendy playback will always override this with mode 1, since they share pitch tuning with NTSC.
 #   A \ in artist/track names will normally be treated as a newline.
 #
 # ALLCAPS
@@ -30,4 +36,4 @@ GAP 2
 #   Seconds appended to each track as a gap.
 #
 # #
-#   A line starting with a hash followed by a space will be treated as a comment.
+#   Text following a # will be treated as a comment until the end of line.
