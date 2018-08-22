@@ -84,7 +84,7 @@ If you need a way to edit the files in /in_art/ try Shiru's NES Screen Tool:
 https://shiru.untergrund.net/software.shtml
 
 
-Licence:
+License:
 
 Go ahead and use this code, fork it, modify it, do whatever you like with it, commercial (good luck) or otherwise.
 The project contained in py65emu was not written by me, but it has a license compatible with the above.
