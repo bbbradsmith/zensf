@@ -553,11 +553,11 @@ gamepad_poll_: ; standard single read
 	rts
 
 gamepad_poll: ; DPCM safe read-until-consistent
-	jsr gamepad_poll
+	jsr gamepad_poll_
 	:
 		lda gamepad
 		pha
-		jsr gamepad_poll
+		jsr gamepad_poll_
 		pla
 		cmp gamepad
 		bne :-
@@ -675,6 +675,8 @@ sprite:
 	;   clobbers: A, X, Y, temp
 	@sprite_x = temp+0
 	@sprite_y = temp+1
+	stx @sprite_x
+	sty @sprite_y
 	ldy #0
 	ldx oam_pos
 	beq @finish ; OAM full
@@ -696,7 +698,7 @@ sprite:
 	sta oam+1, X
 	lda (ptr), Y
 	iny
-	sta oam+2, Y
+	sta oam+2, X
 	inx
 	inx
 	inx
