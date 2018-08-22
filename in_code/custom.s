@@ -15,6 +15,9 @@
 custom_main:
 	lda #SCREEN_Title
 	jsr load_screen
+	jsr sprite_begin
+	jsr sprite_finish
+	jsr fade_in
 	; TODO
 	:
 	jmp :-

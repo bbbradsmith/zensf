@@ -99,7 +99,7 @@ INES2           = %00001000 ; NES 2.0 flag for bit 7
 INES2_SUBMAPPER = 0
 INES2_PRGRAM    = 0 ; x: 2^(6+x) bytes (0 for none)
 INES2_PRGBAT    = 0
-INES2_CHRRAM    = 0
+INES2_CHRRAM    = 7
 INES2_CHRBAT    = 0
 INES2_REGION    = 2 ; 0=NTSC, 1=PAL, 2=Dual
 
@@ -111,8 +111,8 @@ INES2_REGION    = 2 ; 0=NTSC, 1=PAL, 2=Dual
 ; iNES 2 section
 .byte (INES2_SUBMAPPER << 4) | (INES_MAPPER>>8)
 .byte ((INES_CHR_8K >> 8) << 4) | (INES_PRG_16K >> 4)
-.byte (INES2_PRGRAM << 4) | INES2_PRGBAT
-.byte (INES2_CHRRAM << 4) | INES2_CHRBAT
+.byte (INES2_PRGBAT << 4) | INES2_PRGRAM
+.byte (INES2_CHRBAT << 4) | INES2_CHRRAM
 .byte INES2_REGION
 .byte $00 ; VS system
 .byte $00, $00 ; padding/reserved
@@ -773,7 +773,7 @@ fade_in:
 	jsr fade_step_
 	lda #$10
 	jsr fade_step_
-	lda #$10
+	lda #$00
 	jsr fade_apply_
 	jsr ppu_update
 	rts
@@ -818,6 +818,7 @@ art_load_ppu_256b_:
 		sta $2007
 		iny
 		bne :-
+	inc ptr+1
 	rts
 
 load_screen:
@@ -828,7 +829,6 @@ load_screen:
 	asl
 	asl
 	tax ; X = screen * 8
-	pha
 	; latch PPU address to 0
 	bit $2002
 	lda #0
@@ -845,7 +845,7 @@ load_screen:
 	; NMT $2000
 	lda screen_table+0, X
 	jsr art_prepare_
-	jsr art_load_ppu_4k_
+	jsr art_load_ppu_1k_
 	; palette BG
 	lda screen_table+3, X
 	jsr art_prepare_
