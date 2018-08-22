@@ -1,8 +1,11 @@
 # zensf
 Difficult to use tools for making an NES ROM album from NSF files.
 
-This is mostly for my personal use, and is going to be poorly documented. If you'd like something easier to use, try EZNSF instead:
+This is mostly for my personal use, though I offer it freely for anyone to use.
+Comments and documentation are written for my own benefit, but if you're lucky they'll be enough for you.
+This is not a tutorial. If you'd like something easier to use, try EZNSF instead:
 https://github.com/bbbradsmith/eznsf
+
 
 Instructions:
 
@@ -59,13 +62,12 @@ Instructions:
 6. Build NSF with build_nsf.bat
 7. Build NSFe with build_nsfe.bat (test this and/or the NSF to verify that everything done so far is correct)
 
+8. Prepare /in_code/custom.s to do your custom stuff. All the menus and stuff are handled in here.
+9. Build NES with build_nes.bat
 
-8. Prepare custom stuff?
-9. Build the final stuff?
+This isn't finished, so the NES ROM isn't functional yet.
 
 All input text files will be interpreted as UTF-8.
-
-This isn't finished.
 
 
 Dependencies:
@@ -75,3 +77,27 @@ http://cc65.github.io/cc65/
 
 py65emu - already included in py65emu/
 https://github.com/docmarionum1/py65emu
+
+If you're on a host platform other than Windows, I'm sure you can figure out how to replace those batch files with whatever script you think is appropriate.
+
+If you need a way to edit the files in /in_art/ try Shiru's NES Screen Tool:
+https://shiru.untergrund.net/software.shtml
+
+
+Licence:
+
+Go ahead and use this code, fork it, modify it, do whatever you like with it, commercial (good luck) or otherwise.
+The project contained in py65emu was not written by me, but it has a license compatible with the above.
+The 3 NSFs included under /in_nsf/ are not included in this license. See below.
+
+
+License exception: 
+
+The 3 NSF files contained under /in_nsf/ are my own and may not be reused or modified without my permission, but may be restristributed freely.
+If you don't intend to properly credit me for them, replace them with your own NSF files instead.
+
+Two of the NSFs are from my album of classical music for the NES:
+http://rainwarrior.ca/music/classic_chips.html
+
+The other NSF was composed for Famicompo Mini Vol. 8 and is available here:
+http://rainwarrior.ca/music/index.html
