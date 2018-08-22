@@ -17,6 +17,7 @@ custom_main:
 	jsr load_screen
 	jsr sprite_begin
 	jsr sprite_finish
+	ldx #0
 	jsr fade_in
 	; TODO
 	:
