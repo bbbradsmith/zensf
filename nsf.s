@@ -139,8 +139,7 @@ stub_init:
 	sta nsf_play+0
 	lda track_play_addr+1, X
 	sta nsf_play+1
-	tya
-	asl
+	txa
 	asl
 	asl
 	tax ; X = track * 8 (8 byte data)

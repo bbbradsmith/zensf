@@ -175,6 +175,7 @@ class NSFSpiderMMU:
             self.bank(i,start_banks[i])
         self.stat_highzp = 0
         self.stat_highram = 0
+        self.stat_lowstack = 0x1FF
         self.stat_exram = False
         self.brk = False # BRK notify will be used to signal end of routine
         if (self.nsf.expansion != 0):
@@ -186,8 +187,10 @@ class NSFSpiderMMU:
             self.stat_highram = max(self.stat_highram, addr)
             if (addr < 0x100):
                 self.stat_highzp = max(self.stat_highzp, addr)
-            if (addr == 0x100):
-                raise Exception("Write to stack at $100. Overflow?")
+            elif (addr < 0x200):
+                self.stat_lowstack = min(self.stat_lowstack, addr)
+                if (addr == 0x100):
+                    raise Exception("Write to stack at $100. Overflow?")
         elif (addr >= 0x5FF8) and (addr < 0x6000):
             if not self.nsf.bankswitch:
                 raise Exception("Banskwitching in non-bankswitched NSF.")
@@ -414,6 +417,7 @@ track = 0
 analyzed = []
 highest_zp = 0
 highest_ram = 0
+lowest_stack = 0x1FF
 for (nsf_filename, nsf_song, nsf_min, nsf_sec, nsf_pal_adjust, nsf_loop, nsf_artist, nsf_title, nsf_title_short) in entries:
     # parse the file
     nsf = NSF.open(nsf_filename)
@@ -437,6 +441,7 @@ for (nsf_filename, nsf_song, nsf_min, nsf_sec, nsf_pal_adjust, nsf_loop, nsf_art
         mod += "BANK WRITE: $%02X:$%04X\n" % (offset>>12,pc)
     highest_zp = max(mmu.stat_highzp, highest_zp)
     highest_ram = max(mmu.stat_highram, highest_ram)
+    lowest_stack = min(mmu.stat_lowstack, lowest_stack)
     print(mod)
     mods += mod + "\n"
     result += mod + "\n"
@@ -465,6 +470,7 @@ inc += "TRACK_LENGTH       = %d\n" % len(entries)
 inc += "TRACK_ORDER_LENGTH = %d\n" % len(order)
 inc += "TRACK_HIGH_ZP      = $%02X\n" % highest_zp
 inc += "TRACK_HIGH_RAM     = $%04X\n" % highest_ram
+inc += "TRACK_LOW_STACK    = $%04X\n" % lowest_stack
 inc += "\n"
 
 outbank = 0

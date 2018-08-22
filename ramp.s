@@ -19,7 +19,7 @@
 ; or returning from base_nmi
 ; (these values will be cached in bank_9000, bank_A000, bank_B000)
 
-.export ramp_play      ; will call INIT, enable NMI, then enter playing until ramp_play_exit
+.export ramp_play      ; begins playing track (call INIT, nsf_playing=1)
 .export ramp_nmi
 .export ramp_irq
 .export ramp_reset
@@ -48,7 +48,6 @@
 .export nsf_init_x     ; 0/1 = NTSC/PAL mode
 .export nsf_adjust     ; 0 = none, 1 = double every 5th frame, 2 = FT PAL pitch adjust hack + double 5th
 .export nsf_playing    ; 1 = call PLAY on every NMI
-.export ramp_play_exit ; 1 = exit from ramp_play loop
 
 .import base_nmi
 
@@ -67,7 +66,6 @@ nsf_init_x:     .res 1
 nsf_adjust:     .res 1 
 nsf_playing:    .res 1
 ramp_nmi_now:   .res 1 ; prevents NMI re-entry
-ramp_play_exit: .res 1
 
 .segment "RAMP_CODE"
 
@@ -76,16 +74,9 @@ ramp_play:
 	lda bank_8000
 	sta $5FF8
 	jsr ramp_nsf_init
-	; enable NMI to play music
-	bit $2002
-	lda #%10001000
-	sta $2000
-	:
-		lda ramp_play_exit
-		bne :-
-	; disable NMI to stop playing
-	lda #0
-	sta $2000
+	; enable music playback in NMI
+	lda #1
+	sta nsf_playing
 	; return to BASE bank
 	lda #BANK_BASE
 	sta $5FF8
@@ -108,10 +99,11 @@ ramp_nmi:
 		.assert (base_nmi >= $8000 && base_nmi < $9000), error, "base_nmi must be in $8000 bank"
 		jsr base_nmi
 		lda nsf_playing
-		beq @skip
-		lda bank_8000
-		sta $5FF8
-		jsr ramp_nsf_play
+		beq @play_end
+			lda bank_8000
+			sta $5FF8
+			jsr ramp_nsf_play
+		@play_end:
 		lda #0
 		sta ramp_nmi_now
 	@skip:
@@ -155,8 +147,6 @@ ramp_nsf_init:
 
 ramp_nsf_play:
 	; call NSF PLAY
-	lda #0
-	sta nsf_playing
 	jsr do_nsf_play
 	; if nsf_adjust, double every 5th frame (NTSC to PAL speed conversion)
 	lda nsf_adjust

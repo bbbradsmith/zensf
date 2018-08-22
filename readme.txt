@@ -47,13 +47,14 @@ Instructions:
    5.2. Output:
    5.2.1. /out_info/art.inc
    5.2.2. /out_info/screen.inc
-   5.2.3. /out_info/build.inc
-   5.2.4. /out_info/strings.inc
-   5.2.5. /out_mod/*.bin
-   5.2.6. /out_info/nsfs.inc
-   5.2.7. /out_info/package.txt
-   5.2.8. /out_build/*.o (temporary)
-   5.2.9. /out_build/command_temp.txt (temporary)
+   5.2.3. /out_info/screen_enum.inc
+   5.2.4. /out_info/build.inc
+   5.2.5. /out_info/strings.inc
+   5.2.6. /out_mod/*.bin
+   5.2.7. /out_info/nsfs.inc
+   5.2.8. /out_info/package.txt
+   5.2.9. /out_build/*.o (temporary)
+   5.2.10. /out_build/command_temp.txt (temporary)
 
 6. Build NSF with build_nsf.bat
 7. Build NSFe with build_nsfe.bat (test this and/or the NSF to verify that everything done so far is correct)
