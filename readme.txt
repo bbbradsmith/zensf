@@ -78,7 +78,7 @@ http://cc65.github.io/cc65/
 py65emu - already included in py65emu/
 https://github.com/docmarionum1/py65emu
 
-If you're on a host platform other than Windows, I'm sure you can figure out how to replace those batch files with whatever script you think is appropriate.
+If you're on a host platform other than Windows, you can probably figure out how to replace those batch files with whatever script you think is appropriate.
 
 If you need a way to edit the files in /in_art/ try Shiru's NES Screen Tool:
 https://shiru.untergrund.net/software.shtml
@@ -93,8 +93,7 @@ The 3 NSFs included under /in_nsf/ are not included in this license. See below.
 
 License exception: 
 
-The 3 NSF files contained under /in_nsf/ are my own and may not be reused or modified without my permission, but may be restristributed freely.
-If you don't intend to properly credit me for them, replace them with your own NSF files instead.
+The 3 NSF files contained under /in_nsf/ are my own and may not be reused or modified without my permission, but may be restristributed freely. If you don't intend to properly credit me for them, replace them with your own NSF files instead.
 
 Two of the NSFs are from my album of classical music for the NES:
 http://rainwarrior.ca/music/classic_chips.html
