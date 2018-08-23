@@ -1,5 +1,6 @@
 ; original here: http://wiki.nesdev.com/w/index.php/Detect_TV_system
-; modification: "ALIGN" segment and import/exports added by Brad Smith
+; fetched: 2018-08-23
+; modification: "ALIGN" segment and nmis replaced with nmi_count
 .segment "ALIGN"
 .importzp nmi_count ; from base.s
 nmis = nmi_count
@@ -10,13 +11,13 @@ nmis = nmi_count
 ;
 ; Copying and distribution of this file, with or without
 ; modification, are permitted in any medium without royalty provided
-; the copyright notice and this notice are preserved in any source
+; the copyright notice and this notice are preserved in all source
 ; code copies.  This file is offered as-is, without any warranty.
-
+;
 .export getTVSystem
 ;.importzp nmis ; modified, replaced by assignment above
 
-.align 32  ; ensure that branches do nt cross a page boundary
+.align 32  ; ensure that branches do not cross a page boundary
 
 ;;
 ; Detects which of NTSC, PAL, or Dendy is in use by counting cycles
