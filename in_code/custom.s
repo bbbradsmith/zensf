@@ -9,6 +9,8 @@
 .export custom_main
 .export custom_nmi
 
+.import nsf_playing ; ramp.s
+
 TRACKS = TRACK_ORDER_LENGTH
 
 .include "../out_info/screen_enum.inc"
@@ -22,6 +24,7 @@ gamepad_last: .res 1
 gamepad_new:  .res 1
 title_pos:    .res 1
 track:        .res 1
+paused:       .res 1
 
 .segment "CUSTOM"
 
@@ -155,6 +158,13 @@ rainbow17:
 	jsr sprite
 .endmacro
 
+.macro SPRITEXY addr, x_, y_
+	LOAD_PTR addr
+	ldx #x_
+	ldy #y_
+	jsr sprite
+.endmacro
+
 sprite_title:  .byte    0,    0, $0C, $00
                .byte   55,    0, $0C, $40, 128
 sprite_tracks: .byte   -3,    0, $0C, $00, 128
@@ -180,6 +190,30 @@ sprite_colon:  .byte    0,   -1, $0A, $00, 128
 sprite_play:   .byte    0,   -1, $0B, $00, 128
 sprite_loop:   .byte    0,   -1, $0C, $00, 128
 sprite_pause:  .byte    0,   -1, $0D, $00, 128
+
+sprite_num_table:
+.word sprite_num0
+.word sprite_num1
+.word sprite_num2
+.word sprite_num3
+.word sprite_num4
+.word sprite_num5
+.word sprite_num6
+.word sprite_num7
+.word sprite_num8
+.word sprite_num9
+
+load_sprite_num:
+	; A = number 0-9
+	; clobbers X
+	asl
+	tax
+	lda sprite_num_table+0, X
+	sta ptr+0
+	lda sprite_num_table+1, X
+	sta ptr+1
+	rts
+
 ; menu screens
 
 menu_title_redraw:
@@ -388,11 +422,39 @@ menu_tracks_play:
 	sta sfx_on
 	jmp menu_play
 
+.macro SPRITENUM num, x_, y_
+	lda num
+	jsr load_sprite_num
+	ldx #x_
+	ldy #y_
+	jsr sprite
+.endmacro
+
 menu_play_redraw:
 	jsr sprite_begin
-	; TODO timer, play mode, etc.
+	SPRITENUM time_d0, 140, 144
+	SPRITENUM time_d1, 132, 144
+	SPRITENUM time_d2, 116, 144
+	SPRITENUM time_d3, 108, 144
+	SPRITEXY sprite_colon, 124, 144
+	lda nsf_playing
+	bne :+
+		LOAD_PTR sprite_pause
+		jmp @mode
+	:
+	lda nsf_looping
+	beq :+
+		LOAD_PTR sprite_loop
+		jmp @mode
+	:
+		LOAD_PTR sprite_play
+	;
+@mode:
+	ldx #124
+	ldy #156
+	jsr sprite
 	jsr sprite_finish
-	rts
+	jmp rainbow17
 
 menu_play:
 	lda #SCREEN_Play
@@ -405,11 +467,119 @@ menu_play:
 	lda track
 	jsr load_track_title
 	jsr ppu_string
+	jsr menu_play_restart_
 	jsr menu_play_redraw
 	jsr ffade_in
+@loop:
+	jsr gamepad_poll_new
+	;lda gamepad_new
+	and #(PAD_SELECT)
+	beq :+
+		jsr menu_play_stop_
+		jmp menu_tracks
+	:
+	lda gamepad_new
+	and #(PAD_B)
+	beq :+
+		lda #1
+		sta nsf_looping
+		lda nsf_playing
+		bne :+
+		lda paused
+		bne @unpause
+		jsr menu_play_restart_
+	:
+	lda gamepad_new
+	and #(PAD_A)
+	beq :+
+		lda #0
+		sta nsf_looping
+		lda nsf_playing
+		bne :+
+		lda paused
+		bne @unpause
+		jsr menu_play_restart_
+	:
+	lda gamepad_new
+	and #(PAD_START)
+	beq @pause_end
+		lda paused
+		beq :+
+		@unpause:
+			; unpause
+			lda #$0F
+			sta $4015 ; re-enable channels
+			lda #1
+			sta nsf_playing
+			lda #0
+			sta paused
+			jmp @pause_end
+		:
+		lda nsf_playing
+		beq :+
+			; pause
+			lda #$00
+			sta nsf_playing
+			sta $4015 ; disable channels
+			lda #1
+			sta paused
+			jmp @pause_end
+		:
+			; restart
+			jsr menu_play_restart_
+		;
+	@pause_end:
+	lda gamepad_new
+	and #(PAD_L | PAD_U)
+	beq @track_prev_end
+		lda track
+		bne :+
+			jsr menu_play_restart_
+			jmp @track_prev_end
+		:
+		jsr menu_play_stop_
+		dec track
+		jmp menu_play
+	@track_prev_end:
+	lda gamepad_new
+	and #(PAD_R | PAD_D)
+	beq :+
+		lda track
+		cmp #(TRACKS-1)
+		bcs :+
+		jsr menu_play_stop_
+		inc track
+		jmp menu_play
+	:
+	; auto-advance if track finished and not looping
+	lda nsf_looping
+	bne :+
+	lda advance
+	beq :+
+	lda track
+	cmp #(TRACKS-1)
+	bcs :+
+		jsr menu_play_stop_
+		inc track
+		jmp menu_play
+	:
+	; redraw and go to next frame
+	jsr menu_play_redraw
+	jsr ppu_update
+	jmp @loop
+
+menu_play_stop_:
+	; silence and fade out
+	lda #$00
+	sta nsf_playing
+	sta $4015
+	jmp ffade_out
+
+menu_play_restart_:
+	lda #0
+	sta paused
 	ldx track
 	jsr play_track
-	:
-	jmp :-
+	rts
 
 ; end of file

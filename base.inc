@@ -31,6 +31,7 @@
 .global time_d3
 .global nsf_looping ; 0 to continue to next track, 1 to loop
 .global nsf_track ; internal NSF track
+.global advance ; 1 if track is finished playing, ready to advance
 
 ; constants
 

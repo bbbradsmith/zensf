@@ -81,6 +81,7 @@ time_d2:       .res 1
 time_d3:       .res 1
 nsf_looping:   .res 1
 nsf_track:     .res 1
+advance:       .res 1
 
 
 .segment "OAM"
@@ -178,8 +179,13 @@ base_nmi:
 	jmp base_unbanks
 
 base_ramp_play:
+	lda #0
+	sta $2000 ; disable NMI (NMI has to restore BASE banks, will interfere with INIT)
 	jsr base_unbanks
 	jsr ramp_play
+	bit $2002
+	lda ppu_ctrl
+	sta $2000 ; restore NMI
 	jmp base_banks
 
 ; main routines
@@ -370,6 +376,8 @@ base_nmi_:
 			bcc :+
 				stx nsf_playing ; stop playback if not looping and track finished
 				stx $4015 ; silence all channels
+				lda #1
+				sta advance ; signal that track may advance
 			:
 			; display counter
 			inc time_d0 ; seconds
@@ -421,6 +429,14 @@ play_track:
 	; in: X = track
 	lda #0
 	sta nsf_playing
+	sta advance
+	sta time_frame
+	sta time_seconds+0
+	sta time_seconds+1
+	sta time_d0
+	sta time_d1
+	sta time_d2
+	sta time_d3
 	lda track_order, X
 	sta nsf_track
 	; NSF init
