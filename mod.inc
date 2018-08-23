@@ -8,8 +8,10 @@
 
 ; dummy exports for ramp.s
 base_nmi = $8000
+base_banks = $8000
 BASE_BANK = $FF
 .export base_nmi
+.export base_banks
 .exportzp BASE_BANK
 
 ; bankswitch replacements (from ramp.s)

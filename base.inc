@@ -59,8 +59,8 @@ PAD_R      = $80
 .global sprite_begin ; call before adding sprites
 .global sprite_finish ; call when finished adding sprites
 .global sprite ; ptr, X, Y - add sprite (data list of x,y,tile,attrib, ends with x=128)
-.global fade_out ; X=speed (0 fastest), fades out, PPU off
-.global fade_in ; X=speed (0 fastest), fades in, PPU on
+.global fade_out ; X=speed (0 fastest), fades out, PPU off (clobbers nmt_buffer 32-64, $0D column forbidden)
+.global fade_in ; X=speed (0 fastest), fades in, PPU on (clobbers nmt_buffer 32-64, $0D column forbidden)
 .global load_screen ; A = screen from screen_enums.inc
 .global load_track_title ; A = track, out to ptr
 .global load_track_title_short ; A = track, out to ptr

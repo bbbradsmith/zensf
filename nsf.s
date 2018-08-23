@@ -79,7 +79,9 @@ pdst: .res 2
 
 ; dummy NMI for ramp.s
 .export base_nmi
+.export base_banks
 base_nmi:
+base_banks:
 	rts
 
 ; A = track

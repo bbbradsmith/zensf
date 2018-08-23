@@ -9,6 +9,8 @@
 .export custom_main
 .export custom_nmi
 
+TRACKS = TRACK_ORDER_LENGTH
+
 .include "../out_info/screen_enum.inc"
 
 .segment "CUSTOM_ZP" : zeropage
@@ -155,7 +157,7 @@ rainbow17:
 
 sprite_title:  .byte    0,    0, $0C, $00
                .byte   55,    0, $0C, $40, 128
-sprite_tracks: .byte    0,    0, $0C, $00, 128
+sprite_tracks: .byte   -3,    0, $0C, $00, 128
 sprite_info0:  .byte    0,   -2, $10, $00, 128
 sprite_info1:  .byte    1,   -2, $11, $00, 128
 sprite_info2:  .byte    1,   -2, $12, $00, 128
@@ -214,8 +216,8 @@ menu_title:
 	lda gamepad_new
 	and #(PAD_A | PAD_B | PAD_START)
 	beq :+
-		jsr ffade_out
 		SFX sfx_cursor_act
+		jsr ffade_out
 		lda title_pos
 		jne menu_info
 		jmp menu_tracks
@@ -225,7 +227,6 @@ menu_title:
 	jsr ppu_update
 	jmp @loop
 
-	
 menu_info_bob_:
 	clc
 	adc nmi_count
@@ -254,15 +255,15 @@ menu_info_bob_:
 menu_info_redraw:
 	jsr sprite_begin
 	; INFO letters bobbing up and down
-	MENU_INFO_BOB  0,  8, 20, sprite_info0
-	MENU_INFO_BOB 13, 13, 19, sprite_info1
-	MENU_INFO_BOB 26, 18, 22, sprite_info2
-	MENU_INFO_BOB 39, 23, 21, sprite_info3
+	MENU_INFO_BOB   0,  8, 20, sprite_info0
+	MENU_INFO_BOB  53, 13, 19, sprite_info1
+	MENU_INFO_BOB 106, 18, 22, sprite_info2
+	MENU_INFO_BOB 159, 23, 21, sprite_info3
 	; shadow underlay
-	MENU_INFO_BOB  0,  8, 20, sprite_infu0
-	MENU_INFO_BOB 13, 13, 19, sprite_infu1
-	MENU_INFO_BOB 26, 18, 22, sprite_infu2
-	MENU_INFO_BOB 39, 23, 21, sprite_infu3
+	MENU_INFO_BOB   0,  8, 20, sprite_infu0
+	MENU_INFO_BOB  53, 13, 19, sprite_infu1
+	MENU_INFO_BOB 106, 18, 22, sprite_infu2
+	MENU_INFO_BOB 159, 23, 21, sprite_infu3
 	jsr sprite_finish
 	jmp rainbow17
 
@@ -274,14 +275,141 @@ menu_info:
 @loop:
 	jsr gamepad_poll_new
 	beq :+
-		jsr ffade_out
 		SFX sfx_cursor_act
+		jsr ffade_out
 		jmp menu_title
 	:
 	jsr menu_info_redraw
 	jsr ppu_update
 	jmp @loop
 
-menu_tracks = menu_title ; TODO
+menu_tracks_redraw:
+	; update artist
+	LOAD_NMT ($2000+6+(23*32))
+	lda track
+	jsr load_track_artist
+	jsr ppu_string_buffer
+	lda #$00
+	ldx nmt_count ; fill with spaces to 20 characters wide
+	:
+		cpx #20
+		bcs :+
+		sta nmt_buffer, X
+		inx
+		jmp :-
+	:
+	stx nmt_count
+	; draw track cursor
+	jsr sprite_begin
+	lda track
+	asl
+	asl
+	asl
+	clc
+	adc #(6*8)
+	tay
+	ldx #(5*8)
+	SPRITE sprite_tracks
+	jsr sprite_finish
+	jmp rainbow17
+
+menu_tracks:
+	lda #SCREEN_Tracks
+	jsr load_screen
+	; fill track names
+	LOAD_NMT ($2000+6+(6*32))
+	lda #0
+	:
+		pha
+		jsr load_track_title_short
+		jsr ppu_string
+		lda nmt_addr+0
+		clc
+		adc #<32
+		sta nmt_addr+0
+		lda nmt_addr+1
+		adc #>32
+		sta nmt_addr+1
+		pla
+		clc
+		adc #1
+		cmp #TRACKS
+		bcc :-
+	jsr menu_tracks_redraw
+	jsr ppu_update
+	jsr ffade_in
+@loop:
+	jsr gamepad_poll_new
+	;lda gamepad_new
+	and #(PAD_R | PAD_D)
+	beq :+
+		lda track
+		cmp #(TRACKS-1)
+		bcs :+
+		inc track
+		SFX sfx_cursor_move
+	:
+	lda gamepad_new
+	and #(PAD_L | PAD_U)
+	beq :+
+		lda track
+		beq :+
+		dec track
+		SFX sfx_cursor_move
+	:
+	lda gamepad_new
+	and #(PAD_SELECT)
+	beq :+
+		SFX sfx_cursor_act
+		jsr ffade_out
+		jmp menu_title
+	:
+	lda gamepad_new
+	and #(PAD_B)
+	beq :+
+		lda #1
+		sta nsf_looping
+		jmp menu_tracks_play
+	:
+	lda gamepad_new
+	and #(PAD_A | PAD_START)
+	beq :+
+		lda #0
+		sta nsf_looping
+		jmp menu_tracks_play
+	:
+	jsr menu_tracks_redraw
+	jsr ppu_update
+	jmp @loop
+
+menu_tracks_play:
+	jsr ffade_out
+	lda #0
+	sta sfx_on
+	jmp menu_play
+
+menu_play_redraw:
+	jsr sprite_begin
+	; TODO timer, play mode, etc.
+	jsr sprite_finish
+	rts
+
+menu_play:
+	lda #SCREEN_Play
+	jsr load_screen
+	LOAD_NMT ($2000+6+(6*32))
+	lda track
+	jsr load_track_artist
+	jsr ppu_string
+	LOAD_NMT ($2000+6+(8*32))
+	lda track
+	jsr load_track_title
+	jsr ppu_string
+	jsr menu_play_redraw
+	jsr ffade_in
+	ldx track
+	jsr play_track
+	:
+	jmp :-
 
 ; end of file

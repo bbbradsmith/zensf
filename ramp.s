@@ -13,6 +13,7 @@
 ;
 ; ramp_play must be called from $8000 bank
 ; base_nmi must reside in $8000 bank
+; base_banks must reside in $8000 bank
 ;
 ; BASE_BANK will be loaded automatically into $8000 before base_nmi is called
 ; $9000, $A000, $B000 must be pre-banked by the caller before entering ramp_play
@@ -50,6 +51,7 @@
 .export nsf_playing    ; 1 = call PLAY on every NMI
 
 .import base_nmi
+.import base_banks
 
 .include "out_info/build.inc"
 
@@ -93,7 +95,7 @@ ramp_nmi:
 	bne @skip
 		lda #1
 		sta ramp_nmi_now
-		; call base_nmi
+		; call base_nmi (needs at least $8000 at BASE)
 		lda #BANK_BASE
 		sta $5FF8
 		.assert (base_nmi >= $8000 && base_nmi < $9000), error, "base_nmi must be in $8000 bank"
@@ -104,6 +106,10 @@ ramp_nmi:
 			sta $5FF8
 			jsr ramp_nsf_play
 		@play_end:
+		; restore all BASE banks
+		lda #BANK_BASE
+		sta $5FF8
+		jsr base_banks
 		lda #0
 		sta ramp_nmi_now
 	@skip:

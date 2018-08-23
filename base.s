@@ -33,6 +33,7 @@
 .import custom_nmi
 
 .export base_nmi
+.export base_banks
 
 .include "base.inc" ; exports RAM and utilities for custom.s
 
@@ -154,6 +155,15 @@ base_banks:
 	stx $5FFB
 	rts
 
+base_unbanks:
+	ldx bank_B000
+	stx $5FFB
+	ldx bank_A000
+	stx $5FFA
+	ldx bank_9000
+	stx $5FF9
+	rts
+
 base_main:
 	;sei
 	cld
@@ -164,15 +174,11 @@ base_main:
 
 base_nmi:
 	jsr base_banks
-	jmp base_nmi_
+	jsr base_nmi_
+	jmp base_unbanks
 
 base_ramp_play:
-	ldx bank_B000
-	stx $5FFB
-	ldx bank_A000
-	stx $5FFA
-	ldx bank_9000
-	sta $5FF9
+	jsr base_unbanks
 	jsr ramp_play
 	jmp base_banks
 
@@ -428,11 +434,13 @@ play_track:
 		cpy #<ZP_LOW
 		bcc :-
 	; clear RAM
+	lda #<$0200
+	sta ptr+0
+	lda #>$0200
+	sta ptr+1
 	ldy #0
-	sty ptr+0
-	sty ptr+1
-	tya
 	@clear_loop:
+		tya ; A = Y = 0
 		sta (ptr), Y
 		inc ptr+0
 		bne :+
@@ -640,6 +648,7 @@ ppu_string_buffer:
 		inx
 		iny
 		jmp :-
+	:
 	stx nmt_count
 	rts
 
@@ -713,7 +722,7 @@ fade_copy_palette_:
 	ldx #32
 	:
 		lda palette-1, X
-		sta nmt_buffer-1, X
+		sta nmt_buffer+31, X
 		dex
 		bne :-
 	rts
@@ -724,7 +733,7 @@ fade_apply_:
 	sta @sub
 	ldx #32
 	@loop:
-		lda nmt_buffer-1, X
+		lda nmt_buffer+31, X
 		sec
 		sbc @sub
 		bcs :+
@@ -872,10 +881,16 @@ load_screen:
 		bcc :-
 	rts
 
+track_index_:
+	tax
+	lda track_order, X
+	rts
+
 load_track_title:
 	; in: A = track
 	; out: ptr
 	; clobbers A, X
+	jsr track_index_
 	asl
 	tax
 	lda track_title_list+0, X
@@ -888,6 +903,7 @@ load_track_title_short:
 	; in: A = track
 	; out: ptr
 	; clobbers A, X
+	jsr track_index_
 	asl
 	tax
 	lda track_title_short_list+0, X
@@ -900,6 +916,7 @@ load_track_artist:
 	; in: A = track
 	; out: ptr
 	; clobbers A, X
+	jsr track_index_
 	asl
 	tax
 	lda track_artist_list+0, X

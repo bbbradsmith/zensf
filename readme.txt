@@ -68,6 +68,7 @@ Instructions:
 This isn't finished, so the NES ROM isn't functional yet.
 
 All input text files will be interpreted as UTF-8.
+Any changes to ramp.s will require package.py to be re-run to rebuild the mod banks.
 
 
 Dependencies:
