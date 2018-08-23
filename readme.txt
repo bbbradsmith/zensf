@@ -15,7 +15,7 @@ https://wiki.nesdev.com/w/index.php/INES_Mapper_031
 
 Instructions:
 
-0. See below for dependencies; in particular you will need to have python 3, and cc65
+0. See below for dependencies; in particular make sure cc65 is placed in the right folder before beginning
 1. Place NSFs in in_nsf/ folder, edit tracks.txt to build the track list
 2. Run nsfspider.py to build in_nsf/tracks.txt and work through any exceptions you get
   2.1. Input:
