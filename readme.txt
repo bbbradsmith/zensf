@@ -85,14 +85,19 @@ If you need a way to edit the files in /in_art/ try Shiru's NES Screen Tool:
 https://shiru.untergrund.net/software.shtml
 
 
-License:
+Licenses:
 
 Go ahead and use this code, fork it, modify it, do whatever you like with it, commercial (good luck) or otherwise. I'd prefer some credit, but I'm not that picky.
+
 The project contained in py65emu was not written by me, but it has a license compatible with the above.
+
+The code condainted in region.s has its own license which requires any source code releases to retain its license/copyright notice, but otherwise may be freely distributed. See that file for details. It was written by Damian Yerrick, and the original version is available here:
+http://wiki.nesdev.com/w/index.php/Detect_TV_system
+
 The 3 NSFs included under /in_nsf/ are not included in this license. See below.
 
 
-License exception: 
+NSF License exception: 
 
 The 3 NSF files contained under /in_nsf/ are my own and may not be reused or modified without my permission, but may be resdistributed freely. If you don't intend to properly credit me for them, replace them with your own NSF files instead.
 
