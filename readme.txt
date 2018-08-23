@@ -6,6 +6,11 @@ Comments and documentation are written for my own benefit, but if you're lucky t
 This is not a tutorial. If you'd like something easier to use, try EZNSF instead:
 https://github.com/bbbradsmith/eznsf
 
+For a demonstration example, see: demo.nes
+
+The NES mapper used by this project is a newer design and only supported by recently made emulators. More info:
+https://wiki.nesdev.com/w/index.php/INES_Mapper_031
+
 
 Instructions:
 
@@ -34,7 +39,7 @@ Instructions:
   3.1. Copy disassembled .s files from out_src/ to out_mod/
   3.2. Review out_info/modlist.txt for things you need to modify:
     3.2.1. Any bank F: comment out last 6 bytes and replace with VECTORS macro
-    3.2.2. Any bankswitch write needs to be replaced
+    3.2.2. Any bankswitch write needs to be replaced (sta $5FFB -> jsr sta_5FFB, etc.)
   3.3. Any extra banks needed can be manually added to binlist.txt
 4. Place nmt/chr/pal art files in in_art/ folder, edit art.txt to provide an art list and other build paramters
 5. Run package.py to build out_mod/ and in_art/ and work through any exceptions you get
@@ -70,6 +75,7 @@ Good luck!
 All input text files will be interpreted as UTF-8.
 Any changes to ramp.s will require package.py to be re-run to rebuild the mod banks.
 If adding NSFs late, add to the end of the list in in_nft/tracks.txt and use the ORDER to specify the playback order. (In nsfspider.py debug_track_skip can be used to skip analysis for NSFs you've already modified.)
+This project cannot support Famicom expansion audio. Don't ask for it. Nothing is impossible, but expansion audio is beyond the scope of this thing.
 
 
 Dependencies:
