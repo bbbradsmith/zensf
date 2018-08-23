@@ -65,7 +65,7 @@ Instructions:
 8. Prepare /in_code/custom.s to do your custom stuff. All the menus and stuff are handled in here.
 9. Build NES with build_nes.bat
 
-This isn't finished, so the NES ROM isn't functional yet.
+Good luck!
 
 All input text files will be interpreted as UTF-8.
 Any changes to ramp.s will require package.py to be re-run to rebuild the mod banks.

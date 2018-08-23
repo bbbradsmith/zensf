@@ -60,17 +60,92 @@ sfx_setup:
 
 sfx_tick:
 	lda sfx_on
+	beq @end
+	lda sfx_wait
 	beq :+
-		; TODO
+		dec sfx_wait
+		jmp @end
 	:
+	ldy sfx_pos
+@loop:
+	jsr sfx_read ; fake equivalent of: lda (sfx_ptr), Y
+	cmp #$20
+	bcs :+
+		; command <$20 = direct write to $40XX register
+		tax
+		iny
+		jsr sfx_read
+		sta $4000, X
+		iny
+		jmp @loop
+	:
+	cmp #$21
+	bcs :+
+		; command $20 = finish frame and wait (0 = next frame)
+		iny
+		jsr sfx_read
+		sta sfx_wait
+		iny
+		jmp @finish
+	:
+		; command $FF (or anything > $20) = finish sfx
+		lda #0
+		sta sfx_on
+		jmp @end
+	;
+@finish:
+	sty sfx_pos
+@end:
 	rts
 
 sfx_play:
-	; TODO
+	lda #0
+	sta sfx_on
+	sta sfx_wait
+	sta sfx_pos
+	lda ptr+0
+	sta sfx_ptr+0
+	lda ptr+1
+	sta sfx_ptr+1
+	lda #1
+	sta sfx_on
 	rts
 
-sfx_cursor_move: ; TODO
-sfx_cursor_act: ; TODO
+sfx_cursor_move:
+.byte $15, $01 ; enable square 0
+.byte $00, $B4 ; square, constant volume 4
+.byte $02, $FF ; low frequency $FF
+.byte $03, $F0 ; enable channel, high freq $0
+.byte $01, $8B ; sweep up
+.byte $20, 6   ; wait a few frames
+.byte $15, $00 ; disable
+.byte $FF      ; end
+
+sfx_cursor_act:
+.byte $15, $02 ; enable square 1
+.byte $04, $B5 ; square, constant volume 5
+.byte $05, $07 ; disable sweep
+.byte $06, $E0 ; low frequency $EO
+.byte $07, $F0 ; enable channel, high freq $0
+.byte $20, 2   ; wait
+.byte $06, $D0 ;
+.byte $20, 2   ;
+.byte $06, $F0 ;
+.byte $20, 2   ;
+.byte $04, $31 ; narrow pulse, constant volume 1 (echo)
+.byte $06, $E0 ;
+.byte $20, 2   ;
+.byte $06, $D0 ;
+.byte $20, 2   ;
+.byte $06, $F0 ;
+.byte $20, 2   ;
+.byte $15, $00 ; disable
+.byte $FF      ; end
+
+.macro SFX addr
+	LOAD_PTR addr
+	jsr sfx_play
+.endmacro
 
 ; utilities
 
@@ -86,11 +161,6 @@ sfx_cursor_act: ; TODO
 	sta nmt_addr+0
 	lda #>addr
 	sta nmt_addr+1
-.endmacro
-
-.macro SFX addr
-	LOAD_PTR addr
-	jsr sfx_play
 .endmacro
 
 ffade_in: ; fastest fade_in

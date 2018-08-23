@@ -1,3 +1,9 @@
+; original here: http://wiki.nesdev.com/w/index.php/Detect_TV_system
+; modification: "ALIGN" segment and import/exports added by Brad Smith
+.segment "ALIGN"
+.importzp nmi_count ; from base.s
+nmis = nmi_count
+
 ;
 ; NES TV system detection code
 ; Copyright 2011 Damian Yerrick
@@ -7,12 +13,8 @@
 ; the copyright notice and this notice are preserved in any source
 ; code copies.  This file is offered as-is, without any warranty.
 
-; modification: this segment and import/exports added by Brad Smith
-.segment "ALIGN"
 .export getTVSystem
-;.importzp nmis
-.importzp nmi_count ; from base.s
-nmis := nmi_count
+;.importzp nmis ; modified, replaced by assignment above
 
 .align 32  ; ensure that branches do nt cross a page boundary
 
