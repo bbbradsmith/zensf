@@ -77,7 +77,7 @@ Good luck!
 Other notes:
 - All input text files will be interpreted as UTF-8.
 - Any changes to ramp.s will require package.py to be re-run to rebuild the mod banks.
-- If adding NSFs late, add to the end of the list in in_nft/tracks.txt and use the ORDER to specify the playback order. (In nsfspider.py debug_track_skip can be used to skip analysis for NSFs you've already modified.)
+- If adding NSFs late, add to the end of the list in in_nfs/tracks.txt and use the ORDER to specify the playback order. (In nsfspider.py debug_track_skip can be used to skip analysis for NSFs you've already modified.)
 - This project cannot support Famicom expansion audio. Don't ask for it. Nothing is impossible, but expansion audio is beyond the scope of this thing.
 
 
