@@ -1,4 +1,5 @@
-# zensf
+# ZENSF
+
 Difficult to use tools for making an NES ROM album from NSF files.
 
 This is mostly for my personal use, though I offer it freely for anyone to use.
