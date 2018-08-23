@@ -74,6 +74,9 @@ If adding NSFs late, add to the end of the list in in_nft/tracks.txt and use the
 
 Dependencies:
 
+python 3 - install it
+https://www.python.org/
+
 cc65 - place in cc65/ folder
 http://cc65.github.io/cc65/
 
