@@ -112,7 +112,7 @@ INES2_REGION    = 2 ; 0=NTSC, 1=PAL, 2=Dual
 .byte (<INES_MAPPER & %11110000) | INES2
 ; iNES 2 section
 .byte (INES2_SUBMAPPER << 4) | (INES_MAPPER>>8)
-.byte ((INES_CHR_8K >> 8) << 4) | (INES_PRG_16K >> 4)
+.byte ((INES_CHR_8K >> 8) << 4) | (INES_PRG_16K >> 8)
 .byte (INES2_PRGBAT << 4) | INES2_PRGRAM
 .byte (INES2_CHRBAT << 4) | INES2_CHRRAM
 .byte INES2_REGION

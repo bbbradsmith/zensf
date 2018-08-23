@@ -35,7 +35,7 @@ BASE_BANK = $FF
 .assert * = $FFFA, error, "VECTORS must be at $FFFA"
 .word ramp_nmi
 .word ramp_reset
-.word ramp_ieq
+.word ramp_irq
 .endmacro
 
 ; end of file

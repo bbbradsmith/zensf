@@ -402,6 +402,8 @@ s = "Order:"
 for o in order:
     if (o > len(entries)):
         raise Exception("Order (%d) too high!" % o)
+    if (o < 1):
+        raise Exception("Order 0 too low!")
     s += " %02d" % o
 result += s + "\n\n"
 print(s)
@@ -528,7 +530,9 @@ for track in range(len(analyzed)):
             mtext = f.read()
             f.seek(0)
             f.write(".include \"../mod.inc\"\n")
-            f.write((".segment \"M%04X\"\n\n" % addr) + mtext)
+            f.write(".segment \"M%04X\"\n" % addr)
+            f.write(".org $%04X\n\n" % addr)
+            f.write(mtext)
             f.close()
             disassembled.append(bname)
         binlist_entry = bname
