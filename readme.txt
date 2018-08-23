@@ -87,14 +87,14 @@ https://shiru.untergrund.net/software.shtml
 
 License:
 
-Go ahead and use this code, fork it, modify it, do whatever you like with it, commercial (good luck) or otherwise.
+Go ahead and use this code, fork it, modify it, do whatever you like with it, commercial (good luck) or otherwise. I'd prefer some credit, but I'm not that picky.
 The project contained in py65emu was not written by me, but it has a license compatible with the above.
 The 3 NSFs included under /in_nsf/ are not included in this license. See below.
 
 
 License exception: 
 
-The 3 NSF files contained under /in_nsf/ are my own and may not be reused or modified without my permission, but may be restristributed freely. If you don't intend to properly credit me for them, replace them with your own NSF files instead.
+The 3 NSF files contained under /in_nsf/ are my own and may not be reused or modified without my permission, but may be resdistributed freely. If you don't intend to properly credit me for them, replace them with your own NSF files instead.
 
 Two of the NSFs are from my album of classical music for the NES:
 http://rainwarrior.ca/music/classic_chips.html
