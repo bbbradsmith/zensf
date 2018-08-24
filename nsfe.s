@@ -64,6 +64,13 @@
 .dword __NSFE_tlbl_SIZE__ - 8
 .byte "tlbl"
 
+.segment "NSFE_regn"
+.import __NSFE_regn_SIZE__
+.dword __NSFE_regn_SIZE__ - 8
+.byte "regn"
+.byte %00000111 ; Dendy, PAL, NTSC
+.byte 0 ; prefer NTSC
+
 .segment "NSFE_NEND"
 .dword 0
 .byte "NEND"
