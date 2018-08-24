@@ -235,6 +235,7 @@ rainbow17:
 	jsr sprite
 .endmacro
 
+; sprite definitions:  [x     y tile attr] 128=end
 sprite_title:  .byte    0,    0, $0C, $00
                .byte   55,    0, $0C, $40, 128
 sprite_tracks: .byte   -3,    0, $0C, $00, 128

@@ -173,6 +173,8 @@ class NSFSpiderMMU:
             start_banks = [0,1,2,3,4,5,6,7]
         for i in range(8):
             self.bank(i,start_banks[i])
+        if self.nsf.bank_end < (self.banks[7] / 0x1000):
+            self.stat_bank_f = set() # F bank is unused, $FF will substitute
         self.stat_highzp = 0
         self.stat_highram = 0
         self.stat_lowstack = 0x1FF
@@ -391,7 +393,7 @@ for line in open(os.path.join(in_dir,in_list),"rt",encoding="UTF-8").readlines()
         nsf_title_short = args[7]
     entry = (nsf_filename, nsf_song, nsf_min, nsf_sec, nsf_pal_adjust, nsf_loop, nsf_artist, nsf_title, nsf_title_short)
     entries.append(entry)
-    entry_str = "%02d: %-90s %d %02d:%02d %d%d %-25s %s" % (track, nsf_filename, nsf_song, nsf_min, nsf_sec, nsf_pal_adjust, nsf_loop, nsf_artist, nsf_title)
+    entry_str = "%02d: %-40s %d %02d:%02d %d%d %-25s %s" % (track, nsf_filename, nsf_song, nsf_min, nsf_sec, nsf_pal_adjust, nsf_loop, nsf_artist, nsf_title)
     print(entry_str)
     result += entry_str + "\n"
     track += 1
@@ -475,6 +477,8 @@ inc += "TRACK_HIGH_RAM     = $%04X\n" % highest_ram
 inc += "TRACK_LOW_STACK    = $%04X\n" % lowest_stack
 inc += "\n"
 
+mod_bins = "BIN numbers:\n"
+
 outbank = 0
 generated = []
 disassembled = []
@@ -495,6 +499,7 @@ for track in range(len(analyzed)):
             reuse = True
             bank_f = bank_f.union(r_bank_f)
             bank_write = bank_write.union(r_bank_write)
+    mod_bins += ("  Track %02d = %02X bin - " % (track,track_write)) + nsf_title + "\n"
     # export banks
     for b in range(nsf.bank_begin, nsf.bank_begin + nsf.bank_count):
         addr = -1
@@ -566,12 +571,19 @@ for track in range(len(analyzed)):
     if nsf_title_short == None:
         inc_title_short += "track_title_short_%02X = track_title_%02X\n" % (track, track)
     else:
-        inc_title_short += "track_title_short_%02X: .asciiz \"%s\"\n" % (track, text_remap(nsf_title_short))
+        inc_title_short += "track_title_short_%02X: .asciiz \"%s\"\n" % (track, text_remap(nsf_title_short))       
 
 inc_order = "track_order:\n.byte"
 for o in order:
     inc_order += " $%02X," % (o-1)
 inc_order += " 0\n"
+
+s = "Disassembled banks: %d\n" % len(disassembled)
+result += s
+print(s)
+
+mods += mod_bins + "\n"
+print(mod_bins)
     
 # second pass for generated data
 inc_pal_adjust += "end\n.byte "

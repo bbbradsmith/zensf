@@ -39,7 +39,7 @@ Instructions:
 
 3. Prepare modified banks.
   3.1. Copy disassembled .s files from out_src/ to out_mod/
-  3.2. Review out_info/modlist.txt for things you need to modify:
+  3.2. Review out_info/modlist.txt for things you need to modify with replacments from ramp.s:
     3.2.1. Any bank F: comment out last 6 bytes and replace with VECTORS macro
     3.2.2. Any bankswitch write needs to be replaced (sta $5FFB -> jsr sta_5FFB, etc.)
   3.3. Any extra banks needed can be manually added to binlist.txt
@@ -75,6 +75,7 @@ Instructions:
 Good luck!
 
 Other notes:
+- Some NSF files do not use all startup banks. These will be replaced with the ROM's high bank ($FF).
 - All input text files will be interpreted as UTF-8.
 - Any changes to ramp.s will require package.py to be re-run to rebuild the mod banks.
 - If adding NSFs late, add to the end of the list in in_nfs/tracks.txt and use the ORDER to specify the playback order. (In nsfspider.py debug_track_skip can be used to skip analysis for NSFs you've already modified.)
