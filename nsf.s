@@ -19,7 +19,7 @@ BANK_STUB = BANK_ART
 .byte 1 ; starting song
 .word $8000 ; LOAD
 .word stub_init ; INIT
-.word ramp_nsf_play ; PLAY
+.word stub_play ; PLAY
 .byte NSF_TITLE
 .res 32 - .strlen(NSF_TITLE)
 .byte NSF_ARTIST
@@ -76,6 +76,7 @@ pdst: .res 2
 
 ; exports for nsfe.s
 .export stub_init
+.export stub_play
 .exportzp TRACK_ORDER_LENGTH
 
 ; dummy NMI for ramp.s
@@ -174,6 +175,9 @@ stub_init:
 	sta bank_8000 ; defer this bankswitch for a moment
 	jmp stub_finish ; run stub_finish from RAM
 
+stub_play:
+	jmp stub_play_ram
+
 high_bank_fix:
 	; some players might not like to use "bank $FF" if the file is not that large
 	; (bank $FF is used in the starting bank tables to take up unused space, and is completely safe in the .NES version)
@@ -226,10 +230,23 @@ ramp_code_load:
 	rts
 
 .segment "RAMP_CODE"
+
 stub_finish:
 	lda bank_8000
 	sta $5FF8
-	jmp ramp_nsf_init
+	jsr ramp_nsf_init
+stub_return:
+	lda #BANK_STUB
+	sta $5FF8
+	rts
+
+stub_play_ram:
+	; could also just point PLAY at ramp_nsf_play directly
+	; but PLAY pointing to RAM seemed to be a problem for the PowerPak?
+	lda bank_8000
+	sta $5FF8
+	jsr ramp_nsf_play
+	jmp stub_return
 
 .assert stub_finish > ramp_nsf_init, error, "nsf.o must be linked after ramp.o (mods will rely on its address)"
 

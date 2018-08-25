@@ -3,7 +3,7 @@
 ; usd to generate NSFe compilation
 
 .import stub_init
-.import ramp_nsf_play
+.import stub_play
 .importzp TRACK_ORDER_LENGTH
 .import BANK_STUB
 
@@ -18,7 +18,7 @@
 .byte "INFO"
 .word $8000 ; LOAD
 .word stub_init ; INIT
-.word ramp_nsf_play ; PLAY
+.word stub_play ; PLAY
 .byte %00000010 ; PAL/NTSC bits
 .byte %00000000 ; expansion bits
 .byte TRACK_ORDER_LENGTH ; songs
