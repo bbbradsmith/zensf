@@ -242,7 +242,9 @@ stub_return:
 
 stub_play_ram:
 	; could also just point PLAY at ramp_nsf_play directly
-	; but PLAY pointing to RAM seemed to be a problem for the PowerPak?
+	; but the PowerPak does not appear to correctly re-initialize
+	; banks when switching tracks, so unless the stub bank is restored
+	; after every PLAY, the INIT for the next track will fail.
 	lda bank_8000
 	sta $5FF8
 	jsr ramp_nsf_play
