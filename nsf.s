@@ -47,6 +47,7 @@ pdst: .res 2
 .include "out_info/tracks.inc"
 .assert TRACK_HIGH_ZP < ZP_LOW, error, "Embedded NSFs have conflicting ZP use."
 .assert TRACK_HIGH_RAM < RAM_LOW, error, "Embedded NSFs have conflicting RAM use."
+.assert <BANK_STUB = BANK_STUB, error, "Impossibly high BANK_STUB."
 
 .import ramp_nsf_init
 .import ramp_nsf_play
@@ -146,24 +147,52 @@ stub_init:
 	asl
 	tax ; X = track * 8 (8 byte data)
 	lda track_bank_start+7, X
+	jsr high_bank_fix
 	jsr sta_5FFF
 	lda track_bank_start+6, X
+	jsr high_bank_fix
 	jsr sta_5FFE
 	lda track_bank_start+5, X
+	jsr high_bank_fix
 	jsr sta_5FFD
 	lda track_bank_start+4, X
+	jsr high_bank_fix
 	jsr sta_5FFC
 	lda track_bank_start+3, X
+	jsr high_bank_fix
 	jsr sta_5FFB
 	lda track_bank_start+2, X
+	jsr high_bank_fix
 	jsr sta_5FFA
 	lda track_bank_start+1, X
+	jsr high_bank_fix
 	jsr sta_5FF9
 	lda track_bank_start+0, X
+	jsr high_bank_fix
 	clc
 	adc bank_add
 	sta bank_8000 ; defer this bankswitch for a moment
 	jmp stub_finish ; run stub_finish from RAM
+
+high_bank_fix:
+	; some players might not like to use "bank $FF" if the file is not that large
+	; (bank $FF is used in the starting bank tables to take up unused space, and is completely safe in the .NES version)
+	; nsfspider.py makes sure that NSFs will not switch to out-of-range banks like this on their own,
+	; but the generated startup banks will use $FF intentionally.
+	pha
+	clc
+	adc bank_add
+	cmp #$FF
+	beq :+
+		pla
+		rts
+	:
+	pla
+	; substitute BANK_STUB directly
+	lda #BANK_STUB
+	sec
+	sbc bank_add
+	rts
 
 .import __RAMP_CODE_LOAD__
 .import __RAMP_CODE_RUN__
