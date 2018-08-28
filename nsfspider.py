@@ -653,18 +653,19 @@ nsfe += "\n"
 nsfe_time = ".segment \"NSFE_time\"\n"
 nsfe_fade = ".segment \"NSFE_fade\"\n"
 nsfe_tlbl = ".segment \"NSFE_tlbl\"\n"
+nsfe_taut = ".segment \"NSFE_taut\"\n"
 for o in order:
     track = o-1
     (nsf_filename, nsf_song, nsf_min, nsf_sec, nsf_pal_adjust, nsf_loop, nsf_artist, nsf_title, nsf_title_short) = entries[track]
     nsfe_time += ".dword ((%2d*60)+%2d)*1000 ; %02X %s\n" % (nsf_min, nsf_sec, track, nsf_title)
     nsfe_fade += ".dword %d*1000\n" % gap
-    title = nsf_title
-    if (nsf_title_short != None):
-        title = nsf_title_short
-    nsfe_tlbl += ".asciiz \"%s - %s\" ; %02X\n" % (nsf_artist, title, track)
+    title = nsf_title.replace('\\'," ")
+    nsfe_tlbl += ".asciiz \"%s\" ; %02X\n" % (title, track)
+    nsfe_taut += ".asciiz \"%s\" ; %02X\n" % (nsf_artist, track)
 nsfe += nsfe_time + "\n"
 nsfe += nsfe_fade + "\n"
 nsfe += nsfe_tlbl + "\n"
+nsfe += nsfe_taut + "\n"
 nsfe += "; end of file\n"
 
 # end

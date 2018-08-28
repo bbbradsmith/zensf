@@ -64,6 +64,11 @@
 .dword __NSFE_tlbl_SIZE__ - 8
 .byte "tlbl"
 
+.segment "NSFE_taut"
+.import __NSFE_taut_SIZE__
+.dword __NSFE_taut_SIZE__ - 8
+.byte "taut"
+
 .segment "NSFE_regn"
 .import __NSFE_regn_SIZE__
 .dword __NSFE_regn_SIZE__ - 8
