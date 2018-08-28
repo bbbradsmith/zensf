@@ -100,8 +100,21 @@ https://github.com/docmarionum1/py65emu
 
 If you're on a host platform other than Windows, you can probably figure out how to replace those batch files with whatever script you think is appropriate.
 
+
+Other Utilities:
+
+If you need a player for NSF/NSFe files:
+https://github.com/bbbradsmith/nsfplay
+
+Some emulators that can debug NSF:
+https://www.mesen.ca/
+http://www.fceux.com/
+
 If you need a way to edit the files in in_art/ try Shiru's NES Screen Tool:
 https://shiru.untergrund.net/software.shtml
+
+It may help to be able to identify NSF engines used. This NSFID tool can do that:
+https://forums.nesdev.com/viewtopic.php?f=6&t=14358
 
 
 Licenses:
