@@ -45,6 +45,7 @@
 
 ; used by cfg
 .export ZP_LOW    : abs
+.export ZP_HIGH   : abs
 .export RAM_LOW   : abs
 .export BANK_ART  : abs
 .export BANK_BASE : abs
@@ -414,6 +415,7 @@ base_nmi_:
 .include "out_info/tracks.inc"
 
 .exportzp TRACK_ORDER_LENGTH
+ZP_HIGH = TRACK_RESERVE_ZP
 
 ; ensure there's enough RAM/ZP in the open areas to run the NSFs
 .assert TRACK_HIGH_ZP < ZP_LOW, error, "Embedded NSFs have conflicting ZP use."
@@ -440,15 +442,26 @@ play_track:
 	lda track_order, X
 	sta nsf_track
 	; NSF init
-	; clear ZP
+	.assert <ZP_LOW = ZP_LOW, error, "Impossible ZP_LOW address?"
+	.assert ZP_HIGH <= $100, error, "Impossible ZP_HIGH address?"
+	; clear low ZP
 	ldy #0
 	tya
 	:
+		cpy #<ZP_LOW
+		bcs :+
 		sta $00, Y
 		iny
-		.assert <ZP_LOW = ZP_LOW, error, "Impossible ZP_LOW address?"
-		cpy #<ZP_LOW
-		bcc :-
+		jmp :-
+	:
+	; clear high ZP
+	ldy #<ZP_HIGH
+	:
+		beq :+
+		sta $00, Y
+		iny
+		jmp :-
+	:
 	; clear RAM
 	lda #<$0200
 	sta ptr+0

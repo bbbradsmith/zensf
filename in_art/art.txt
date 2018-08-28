@@ -3,7 +3,7 @@ SCREEN Info    info.nam    bg.chr  fg.chr  bg.pal  fg.pal
 SCREEN Tracks  tracks.nam  bg.chr  fg.chr  bg.pal  fg.pal
 SCREEN Play    play.nam    bg.chr  fg.chr  bg.pal  fg.pal
 
-ZP $F0
+ZP $80
 RAM $500
 BANKS 32
 

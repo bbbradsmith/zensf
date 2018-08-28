@@ -182,13 +182,16 @@ class NSFSpiderMMU:
         self.brk = False # BRK notify will be used to signal end of routine
         if (self.nsf.expansion != 0):
             raise Exception("Expansion audio not supported. (%02X)" % (self.nsf.expansion))
+        self.last_4015 = 0x0F
 
     def write(self, addr, value):
         if (addr < 0x0800):
             self.ram[addr] = value
             self.stat_highram = max(self.stat_highram, addr)
             if (addr < 0x100):
-                self.stat_highzp = max(self.stat_highzp, addr)
+                global reserve
+                if (addr < reserve):
+                    self.stat_highzp = max(self.stat_highzp, addr)
             elif (addr < 0x200):
                 self.stat_lowstack = min(self.stat_lowstack, addr)
                 if (addr == 0x100):
@@ -202,6 +205,13 @@ class NSFSpiderMMU:
             self.stat_exram = True
             self.exram[addr - 0x6000] = value
         elif (addr >= 0x4000) and (addr < 0x4020):
+            if addr == 0x4015:
+                # workaround treating $4015 writes as if DPCM is always "finished"
+                # correctly emulating $4015 reads is a lot more complicated
+                # (requires simulation of parts of all 5 APU channels)
+                # but the one engine I saw reading this only used it to avoid
+                # retriggering DPCM, so this is sufficient.
+                self.last_4015 = value & 0x0F
             #debug("APU write: $%04X = $%02X" % (addr, value))
             pass # Could also add a whitelist of expansion audio addresses
         else:
@@ -221,6 +231,8 @@ class NSFSpiderMMU:
                 if self.pc != 0x01FF: # don't check this on the BRK
                     raise Exception("Read from padding bank: $%02X ($%04X)" % (mb,addr))
             return self.rom[ mo | (addr & 0xFFF) ]
+        elif (addr == 0x4015):
+            return self.last_4015
         else:
             raise Exception("Read to unexpected address: $%04X" % (addr))
 
@@ -285,6 +297,12 @@ def run_nsf(nsf,song,frames):
         execute(cpu, nsf.addr_play, NSF_TIMEOUT_PLAY)
     return mmu
 
+def parse_address(s):
+    if (s.startswith("$")):
+        return int(s[1:],16)
+    else:
+        return int(s,10)
+
 def verify_dir(dir):
     if not os.path.exists(dir):
         os.mkdir(dir)
@@ -298,6 +316,7 @@ binlist = ""
 mods = ""
 inc = ""
 order = []
+reserve = 0x100
 allcaps = False
 text_map = {}
 
@@ -377,6 +396,11 @@ for line in open(os.path.join(in_dir,in_list),"rt",encoding="UTF-8").readlines()
             raise Exception("One argument expected after GAP. (%d)" % in_line_count)
         gap = int(args[1])
         continue
+    elif args[0] == "RESERVE":
+        if len(args) != 2:
+            raise Exception("One argument expected after RESERVE. (%d)" % in_line_count)
+        reserve = parse_address(args[1])
+        continue
     if len(args) < 7 or len(args) > 8:
         raise Exception(("Incorrect number of arguments. (%d)\n> " % in_line_count) + line)
     nsf_filename = os.path.join(in_dir,args[0])
@@ -399,7 +423,7 @@ for line in open(os.path.join(in_dir,in_list),"rt",encoding="UTF-8").readlines()
     track += 1
     
 if len(order) == 0: # default order
-    order = [x for x in range(len(entries))]
+    order = [(x+1) for x in range(len(entries))]
 s = "Order:"
 for o in order:
     if (o > len(entries)):
@@ -424,6 +448,9 @@ highest_ram = 0
 lowest_stack = 0x1FF
 for (nsf_filename, nsf_song, nsf_min, nsf_sec, nsf_pal_adjust, nsf_loop, nsf_artist, nsf_title, nsf_title_short) in entries:
     # parse the file
+    s_track = ("File %d: " % track) + nsf_filename
+    print(s_track)
+    result += s_track + "\n"
     nsf = NSF.open(nsf_filename)
     result += str(nsf) + "\n"
     print(nsf)
@@ -475,6 +502,7 @@ inc += "TRACK_ORDER_LENGTH = %d\n" % len(order)
 inc += "TRACK_HIGH_ZP      = $%02X\n" % highest_zp
 inc += "TRACK_HIGH_RAM     = $%04X\n" % highest_ram
 inc += "TRACK_LOW_STACK    = $%04X\n" % lowest_stack
+inc += "TRACK_RESERVE_ZP   = $%04X\n" % reserve
 inc += "\n"
 
 mod_bins = "BIN numbers:\n"

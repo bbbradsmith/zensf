@@ -43,6 +43,10 @@ Instructions:
     3.2.1. Any bank F: comment out last 6 bytes and replace with VECTORS macro
     3.2.2. Any bankswitch write needs to be replaced (sta $5FFB -> jsr sta_5FFB, etc.)
     3.2.3. A bankswitch from bank "$-1" means it came from RAM. This has to be resolved with manual debugging.
+    3.2.4. If ZP or RAM usage is too high you will probably need to patch the NSF directly to fix this.
+           Some engines with this problem merely clear RAM during INIT, so this can just be replaced with NOP.
+           The RESERVE option is to accomodate engines (e.g. OFGS) that use the high bytes of ZP,
+           ZENSF's ZP usage will be in the middle between ZP (in_art/art.txt) and RESERVE (in_nsf/tracks.txt).
   3.3. Any extra banks needed can be manually added to binlist.txt
 4. Place nmt/chr/pal art files in in_art/ folder, edit art.txt to provide an art list and other build paramters
 5. Run package.py to build out_mod/ and in_art/ and work through any exceptions you get

@@ -10,6 +10,7 @@ ORDER 2 4 7 5 6 3 1
 # ALLCAPS
 MAP "é" "|"
 GAP 2
+RESERVE $C0
 
 # [NSF filename] [song] [mm:ss] [0-2=PAL method] [0/1=loop] [arist] [track name] [shortened track name (optional)]
 #   Fields are separated by spaces, use enclosing quotes for fields that require internal spaces (e.g. track names)
@@ -21,6 +22,11 @@ GAP 2
 #     - All tracks are assumed NTSC capable, there is no adjustment method for PAL to NTSC
 #     - Dendy playback will always override this with mode 1, since they share pitch tuning with NTSC.
 #   A \ in artist/track names will normally be treated as a newline.
+#
+# RESERVE [address]
+#   Reserve bytes on ZP at or above this address for use by NSFs.
+#   Some engines (e.g. OFGS) like to use both high and low ZP addresses,
+#   so this allows ZENSF to use the middle.
 #
 # ALLCAPS
 #   Converts artist/title texts to uppercase. (Applied before MAP.)

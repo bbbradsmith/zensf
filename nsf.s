@@ -9,6 +9,7 @@ BANK_STUB = BANK_ART
 
 ; used by cfg
 .export ZP_LOW : abs
+.export ZP_HIGH : abs
 .export RAM_LOW : abs
 .export BANK_STUB : abs
 
@@ -45,6 +46,9 @@ pdst: .res 2
 .segment "STUB"
 
 .include "out_info/tracks.inc"
+
+ZP_HIGH = TRACK_RESERVE_ZP
+
 .assert TRACK_HIGH_ZP < ZP_LOW, error, "Embedded NSFs have conflicting ZP use."
 .assert TRACK_HIGH_RAM < RAM_LOW, error, "Embedded NSFs have conflicting RAM use."
 .assert <BANK_STUB = BANK_STUB, error, "Impossibly high BANK_STUB."
