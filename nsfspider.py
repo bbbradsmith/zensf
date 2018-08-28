@@ -143,7 +143,7 @@ class NSFSpiderMMU:
         self.nsf = nsf
         self.rom = nsf.rom
 
-    def bank(self,b,v):
+    def bank(self,b,v,ranged=True):
         #debug("bank: %d, %d" % (b,v))
         if self.pc >= 0:
             if self.pc >= 0x8000:
@@ -151,8 +151,10 @@ class NSFSpiderMMU:
                 self.stat_bank_write.add((self.banks[pcb],self.pc)) # bank write from ROM
             else:
                 self.stat_bank_write.add((-1,self.pc)) # bank write from RAM
-        if (b == 7):
+        if (b == 7) and ranged:
             self.stat_bank_f.add(v)
+            if (v > self.nsf.bank_end):
+                raise Exception("Bank F (%d) outside file range. Pad NSF with zeros to fill this bank." % v)
         self.banks[b] = v * 0x1000
 
     # required interface for py65emu MMU
@@ -172,9 +174,7 @@ class NSFSpiderMMU:
         if not self.nsf.bankswitch:
             start_banks = [0,1,2,3,4,5,6,7]
         for i in range(8):
-            self.bank(i,start_banks[i])
-        if self.nsf.bank_end < (self.banks[7] / 0x1000):
-            self.stat_bank_f = set() # F bank is unused, $FF will substitute
+            self.bank(i,start_banks[i],False)
         self.stat_highzp = 0
         self.stat_highram = 0
         self.stat_lowstack = 0x1FF
@@ -579,7 +579,7 @@ for track in range(len(analyzed)):
     bank_add = (track_outbank - nsf.bank_begin) & 0xFF
     inc_init += ".word $%04X ; %02X %s\n" % (nsf.addr_init, track, nsf_title)
     inc_play += ".word $%04X ; %02X %s\n" % (nsf.addr_play, track, nsf_title)
-    inc_bank_offset += ".byte $%02X - $%02X ; %02X %s\n" % (track_outbank, nsf.bank_begin, track, nsf_title)
+    inc_bank_offset += ".byte $%02X ; $%02X - $%02X > %02X %s\n" % ((track_outbank - nsf.bank_begin) & 255, track_outbank, nsf.bank_begin, track, nsf_title)
     start_banks = bytearray(nsf.banks)
     if not nsf.bankswitch:
         start_banks = [0,1,2,3,4,5,6,7]

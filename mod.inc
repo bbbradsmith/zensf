@@ -25,6 +25,9 @@ BASE_BANK = $FF
 .import sta_5FFE
 .import sta_5FFF
 
+.import sty_5FFA
+.import sty_5FFB
+
 ; vectors (from ramp.s)
 
 .import ramp_nmi

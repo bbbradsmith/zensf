@@ -36,6 +36,9 @@
 .export sta_5FFE
 .export sta_5FFF
 
+.export sty_5FFA
+.export sty_5FFB
+
 .export bank_add       ; re-location of original NSF banks
 .export bank_8000      ; rembers the last bank required by NSF (so they can be temporarily replaced)
 .export bank_9000
@@ -203,6 +206,7 @@ sta_5FF9:
 sta_5FFA:
 	php
 	pha
+fin_5FFA_:
 	clc
 	adc bank_add
 	sta bank_A000
@@ -214,6 +218,7 @@ sta_5FFA:
 sta_5FFB:
 	php
 	pha
+fin_5FFB_:
 	clc
 	adc bank_add
 	sta bank_B000
@@ -261,5 +266,18 @@ sta_5FFF:
 	pla
 	plp
 	rts
+
+sty_5FFA:
+	php
+	pha
+	tya
+	jmp fin_5FFA_
+
+sty_5FFB:
+	php
+	pha
+	tya
+	jmp fin_5FFB_
+
 
 ; end of file
