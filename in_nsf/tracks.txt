@@ -27,6 +27,7 @@ RESERVE $C0
 #   Reserve bytes on ZP at or above this address for use by NSFs.
 #   Some engines (e.g. OFGS) like to use both high and low ZP addresses,
 #   so this allows ZENSF to use the middle.
+#   $100/256 indicates no reserve.
 #
 # ALLCAPS
 #   Converts artist/title texts to uppercase. (Applied before MAP.)
