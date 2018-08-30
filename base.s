@@ -110,7 +110,7 @@ INES2_CHRBAT    = 0
 INES2_REGION    = 2 ; 0=NTSC, 1=PAL, 2=Dual
 
 .byte 'N', 'E', 'S', $1A ; ID
-.byte INES_PRG_16K
+.byte <INES_PRG_16K
 .byte INES_CHR_8K
 .byte INES_MIRROR | (INES_BATTERY << 1) | ((INES_MAPPER & $f) << 4)
 .byte (<INES_MAPPER & %11110000) | INES2
