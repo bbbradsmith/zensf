@@ -1,6 +1,9 @@
 ; nsf.s
 ;
 ; used to generate NSF compilation
+;
+;
+; https://github.com/bbbradsmith/zensf
 
 .include "out_info/build.inc"
 .include "out_info/strings.inc"

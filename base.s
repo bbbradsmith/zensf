@@ -2,6 +2,9 @@
 ;
 ; common functionality for NES ROM, stuff that doesn't need to be "custom"
 ; handles direct interaction with ramp.s (intermediary layer between it and custom.s)
+;
+;
+; https://github.com/bbbradsmith/zensf
 
 .macpack longbranch
 

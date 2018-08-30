@@ -1,6 +1,9 @@
 ; nsfe.s
 ;
 ; usd to generate NSFe compilation
+;
+;
+; https://github.com/bbbradsmith/zensf
 
 .import stub_init
 .import stub_play

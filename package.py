@@ -37,6 +37,9 @@ import subprocess
 # /out_build/command_temp.txt (temporary)
 #
 # See art.txt and readme.txt for information.
+#
+#
+# https://github.com/bbbradsmith/zensf
 
 delete_output = True # delete output files before beginning
 

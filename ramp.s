@@ -19,6 +19,9 @@
 ; $9000, $A000, $B000 must be pre-banked by the caller before entering ramp_play
 ; or returning from base_nmi
 ; (these values will be cached in bank_9000, bank_A000, bank_B000)
+;
+;
+; https://github.com/bbbradsmith/zensf
 
 .export ramp_play      ; begins playing track (call INIT, nsf_playing=1)
 .export ramp_nmi

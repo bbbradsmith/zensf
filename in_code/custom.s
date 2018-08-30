@@ -1,6 +1,9 @@
 ; custom.s
 ;
 ; A basic set of menus to demonstrate how to implement them on top of the base layer.
+;
+;
+; https://github.com/bbbradsmith/zensf
 
 .feature force_range ; required for negative values in .byte
 .macpack longbranch

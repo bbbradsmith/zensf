@@ -29,6 +29,9 @@ import py65emu.cpu
 # /out_info/nsfspider.txt
 #
 # See tracks.txt and readme.txt for information.
+#
+#
+# https://github.com/bbbradsmith/zensf
 
 debug_track_skip = 0 # skips the full play/analysis of tracks below this number for faster iteration (if you don't need the mod info)
 delete_output = True # delete output files before beginning

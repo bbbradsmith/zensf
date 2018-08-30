@@ -1,6 +1,9 @@
 ; mod.inc
 ;
 ; include for modifications
+;
+;
+; https://github.com/bbbradsmith/zensf
 
 ; exports for mod.cfg to know where ramp.s resides
 .include "out_info/build.inc"
