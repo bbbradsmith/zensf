@@ -800,7 +800,7 @@ fade_out:
 	jsr fade_step_
 	jsr ppu_off
 	lda #$00
-	jsr fade_apply_ ; restore orgiinal palette now that rendering is off
+	jsr fade_apply_ ; restore original palette now that rendering is off
 	rts
 
 fade_in:
