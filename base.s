@@ -768,9 +768,12 @@ fade_apply_:
 		lda nmt_buffer+31, X
 		sec
 		sbc @sub
-		bcs :+
+		bcs :++
+		:
 			lda #$0F
 		:
+		cmp #$0D ; replace sub-black $0D with black $0F
+		beq :--
 		sta palette-1, X
 		dex
 		bne @loop
