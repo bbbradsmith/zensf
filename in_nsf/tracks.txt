@@ -1,16 +1,56 @@
-"brahms.nsf"       2 05:09 0 0 "Johannes Brahms" "Intermezzo (E minor)\Op. 119 No. 2" "Intermezzo 119-2"
-"debussy.nsf"      1 03:03 1 0 "Claude Debussy" "Prélude"
-"brahms.nsf"       1 02:50 0 0 "Johannes Brahms" "Intermezzo (A minor)\Op. 76 No. 7" "Intermezzo 76-7"
-"debussy.nsf"      2 03:08 1 0 "Claude Debussy" "Menuet"
-"debussy.nsf"      4 03:33 1 0 "Claude Debussy" "Passepied"
-"sundried.nsf"     1 01:44 2 1 "bradsmith" "Sundried"
-"debussy.nsf"      3 03:26 1 0 "Claude Debussy" "Clair de Lune"
+"jaxcheese%20-%20Feels Like the End.nsf"                  1 01:30 2 0 "jaxcheese"            "Feels Like the End"
+"KungFuFurby%20-%20tortitto galaxy.nsf"                   1 10:01 1 0 "KungFuFurby"          "tortitto galaxy"
+"nin-kuuku%20-%20Ruins.nsf"                               1 01:00 1 1 "nin-kuuku"            "Ruins"
+"OffGao%20-%20My Space1.nsf"                              1 04:59 1 0 "OffGao"               "My Space"
+"SepiaPianist%20-%20take_it_beyond_the_mountains.nsf"     1 01:57 2 1 "SepiaPianist"         "take it beyond the mountains" "...beyond the mountains"
+"Teuthida%20-%20Oceanside Acrobatics.nsf"                 1 02:52 2 0 "Teuthida"             "Oceanside Acrobatics"
+"Titan of Plasma%20-%20Extravaganza Quasi-Rhapsody.nsf"   1 02:38 2 1 "Titan of Plasma"      "Extravaganza Quasi-Rhapsody" "Extravaganza..."
+"TMM12%20-%20Obscurity.nsf"                               1 01:43 2 1 "TMM12"                "Obscurity"
+"Entry070.nsf"                                            1 01:59 2 0 "DeDra"                "Peski Russii"
+"TQ-Jam%20-%20Purple code (WIP)_mod.nsf"                  1 02:17 1 0 "TQ-Jam"               "Purple code (WIP)"
 
-ORDER 2 4 7 5 6 3 1
-# ALLCAPS
-MAP "é" "|"
-GAP 2
+# replaced by Peski Russii
+#"TMM12%20-%20Spacial Smoothie_mod.nsf"                    1 04:58 2 0 "TMM12"                "Spacial Smoothie"
+
+# ranked order:
+# 60 titan of plasma
+# 28 tmm12 spatial smoothie -> disqualified for 260hz
+# 85 tq-jam purple
+# 52 offgao myspace
+# 21 kff toritto
+# 81 teuthida ocean
+# 77 tmm12 obscurity
+# 16 sepiapianist mountains
+# 29 jaxcheese feels
+# 73 nin-kuuku ruins
+# 70 dedra - peski russii
+
+ORDER 6 1 9 10 5 4 2 8 3 7
 RESERVE $C0
+
+# purple code modded because of RAM init
+# spacial smoothie modded because of unpadded high bank (then removed)
+
+# oceanside -> pitched DPCM
+# extravaganza -> pitched DPCM
+# KFF has some pitched DPCM around 6:40 maybe? Maybe this is acceptable to be wrong in PAL?
+# spacial smoothie -> disqualified 260hz
+
+# jaxcheese%20-%20Feels Like the End.nsf                   Famitracker
+# KungFuFurby%20-%20tortitto galaxy.nsf                    IT2NSF
+# nin-kuuku%20-%20Ruins.nsf                                NerdTracker_II
+# OffGao%20-%20My Space1.nsf                               OFGS
+# SepiaPianist%20-%20take_it_beyond_the_mountains.nsf      Famitracker
+# Teuthida%20-%20Oceanside Acrobatics.nsf                  Famitracker
+# Titan of Plasma%20-%20Extravaganza Quasi-Rhapsody.nsf    Famitracker
+# TMM12%20-%20Obscurity.nsf                                Famitracker
+# TMM12%20-%20Spacial Smoothie_mod.nsf                     Famitracker
+# TQ-Jam%20-%20Purple code (WIP)_mod.nsf                   MCK
+# Entry070.nsf                                             Famitracker
+
+#ORDER
+# ALLCAPS
+GAP 2
 
 # [NSF filename] [song] [mm:ss] [0-2=PAL method] [0/1=loop] [arist] [track name] [shortened track name (optional)]
 #   Fields are separated by spaces, use enclosing quotes for fields that require internal spaces (e.g. track names)
@@ -22,12 +62,6 @@ RESERVE $C0
 #     - All tracks are assumed NTSC capable, there is no adjustment method for PAL to NTSC
 #     - Dendy playback will always override this with mode 1, since they share pitch tuning with NTSC.
 #   A \ in artist/track names will normally be treated as a newline.
-#
-# RESERVE [address]
-#   Reserve bytes on ZP at or above this address for use by NSFs.
-#   Some engines (e.g. OFGS) like to use both high and low ZP addresses,
-#   so this allows ZENSF to use the middle.
-#   $100/256 indicates no reserve.
 #
 # ALLCAPS
 #   Converts artist/title texts to uppercase. (Applied before MAP.)
