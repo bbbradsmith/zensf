@@ -1,46 +1,21 @@
-"brahms.nsf"       2 05:09 0 0 "Johannes Brahms" "Intermezzo (E minor)\Op. 119 No. 2" "Intermezzo 119-2"
-"debussy.nsf"      1 03:03 1 0 "Claude Debussy" "Prélude"
-"brahms.nsf"       1 02:50 0 0 "Johannes Brahms" "Intermezzo (A minor)\Op. 76 No. 7" "Intermezzo 76-7"
-"debussy.nsf"      2 03:08 1 0 "Claude Debussy" "Menuet"
-"debussy.nsf"      4 03:33 1 0 "Claude Debussy" "Passepied"
-"sundried.nsf"     1 01:44 2 1 "bradsmith" "Sundried"
-"debussy.nsf"      3 03:26 1 0 "Claude Debussy" "Clair de Lune"
+"INTRO II - titan of plasma - The_Evolution_of_the_Elements.nsf"                       1 04:34 2 0 "Titan of Plasma" "The Evolution of the\Elements" "The Evolution..."
+"EARTH IV - pulsebot - Earth_Festivals.nsf"                                            1 01:38 2 0 "PulseBot"        "Earth Festivals"
+"EARTH V - kulor - Of the Nation of Dirtpilers.nsf"                                    1 03:21 2 0 "kulor"           "Of the Nation of\Dirtpilers" "Nation of Dirtpilers..."
+"EARTH VI - b-knox - califormidazod.nsf"                                               1 03:22 2 0 "b-knox"          "califormidazod"
+"AIR IV - Razerek - skytemple.nsf"                                                     1 02:13 2 0 "Razerek"         "Sky Temple"
+"AIR V - Sintel - Extraordinary_Encounters.nsf"                                        1 02:25 2 0 "Sintel"          "Extraordinary Encounters"
+"AIR VI - ordinate - tets304.3.1.8r.nsf"                                               1 01:52 2 0 "ordinate"        "TETS304.3.1.8"
+"WATER IV - petet - coastal_salacot.nsf"                                               1 03:05 2 0 "petet"           "Coastal Salacot Drift"
+"WATER V - savestate - Voyage_a_Atlantis.nsf"                                          1 02:53 2 0 "Savestate"       "Voyage à Atlantis"
+"WATER VI - cheechee - unexplored_depths.nsf"                                          1 02:13 2 0 "cheechee"        "Unexplored Depths"
+"INTERLUDE II - lynn - Hyper Alchemy.nsf"                                              1 01:49 2 0 "lynn"            "Hyper Alchemy!!"
+"FIRE IV - sen-pi - 1-14-18_the_flames_of_DETERMINATION.nsf"                           1 01:23 2 0 "sen-pi"          "the flames of\DETERMINATION" "the flames..."
+"FIRE V - lukas eriksson - backward_blaze.nsf"                                         1 02:56 2 0 "Lukas Eriksson"  "Backward Blaze"
+"FIRE VI - andres - les_cendres_WIP_2-4.nsf"                                           1 02:30 2 0 "adnre"           "les cendres"
+"VOID IV - cathrin - sheol_shuffle.nsf"                                                1 01:22 2 0 "cathrin"         "sheol shuffle"
+"VOID V - gotoandplay - ex nihilo.nsf"                                                 1 02:44 2 0 "gotoandplay"     "ex nihilo"
+"VOID VI - Chimeratio_-_Fleeing_the_Beast_of_Nothingness_Please...Dont_Delete_Me.nsf"  1 04:10 2 0 "Chimeratio"      "Fleeing the Beast of\Nothingness (Please...\Don't Delete Me!)" "Fleeing the Beast..."
 
-ORDER 2 4 7 5 6 3 1
-# ALLCAPS
-MAP "é" "|"
+ORDER 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
+MAP "à" "a" # fix later
 GAP 2
-RESERVE $C0
-
-# [NSF filename] [song] [mm:ss] [0-2=PAL method] [0/1=loop] [arist] [track name] [shortened track name (optional)]
-#   Fields are separated by spaces, use enclosing quotes for fields that require internal spaces (e.g. track names)
-#   [song] field starts at 1
-#   [PAL method]
-#     0 PAL will INIT with X=1 (dual mode NSF)
-#     1 PAL will INIT with X=0, 5/6 frame doubling (pitch is naturally lowered, tuned DPCM will not work)
-#     2 Like 1 but with a workaround to manually switch the pitch table (tuned DPCM will work, Famitracker only)
-#     - All tracks are assumed NTSC capable, there is no adjustment method for PAL to NTSC
-#     - Dendy playback will always override this with mode 1, since they share pitch tuning with NTSC.
-#   A \ in artist/track names will normally be treated as a newline.
-#
-# RESERVE [address]
-#   Reserve bytes on ZP at or above this address for use by NSFs.
-#   Some engines (e.g. OFGS) like to use both high and low ZP addresses,
-#   so this allows ZENSF to use the middle.
-#   $100/256 indicates no reserve.
-#
-# ALLCAPS
-#   Converts artist/title texts to uppercase. (Applied before MAP.)
-#
-# MAP [symbol] [replacement]
-#   Maps occurencs of a string with its replacement string. (Useful if your title has non-ascii characters you need to remap.)
-#
-# ORDER [track #] [track #] ...
-#   May reorder the tracks differently than they are listed in the file.
-#   First track line in the file is track 1.
-#
-# GAP [seconds]
-#   Seconds appended to each track as a gap.
-#
-# #
-#   Text following a # will be treated as a comment until the end of line.
