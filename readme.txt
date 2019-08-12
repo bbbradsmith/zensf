@@ -1,3 +1,12 @@
+# 2A03 Puritans 2 music cart
+
+This is a music cartridge for 2A03 Puritans 2 built on the ZENSF framework.
+
+It is a work in progress.
+
+ZENSF readme below.
+
+
 # ZENSF
 
 Difficult to use tools for making an NES ROM album from NSF files.
