@@ -1,5 +1,5 @@
 out_src
-out_mod
+out_mod/*.bin
 out_info
 out_build
 temp

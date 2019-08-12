@@ -1,16 +1,43 @@
-"brahms.nsf"       2 05:09 0 0 "Johannes Brahms" "Intermezzo (E minor)\Op. 119 No. 2" "Intermezzo 119-2"
-"debussy.nsf"      1 03:03 1 0 "Claude Debussy" "Prélude"
-"brahms.nsf"       1 02:50 0 0 "Johannes Brahms" "Intermezzo (A minor)\Op. 76 No. 7" "Intermezzo 76-7"
-"debussy.nsf"      2 03:08 1 0 "Claude Debussy" "Menuet"
-"debussy.nsf"      4 03:33 1 0 "Claude Debussy" "Passepied"
-"sundried.nsf"     1 01:44 2 1 "bradsmith" "Sundried"
-"debussy.nsf"      3 03:26 1 0 "Claude Debussy" "Clair de Lune"
+"original1.nsf" 1 2:40 2 0 "Lukas Eriksson" "Nothing But Luck"
+"original2.nsf" 1 3:39 2 0 "Lukas Eriksson" "Subdued"
+"original3.nsf" 1 2:05 2 1 "FishyAsh" "Coasting Into The Sunset"
+"original4.nsf" 1 8:34 1 0 "KungFuFurby" "In Space o 1 an ear u (lost signal)" "In Space..."
+"original5.nsf" 1 2:03 2 0 "Lukas Eriksson" "Lava Trip"
+"original6.nsf" 1 3:30 1 0 "OffGao" "Overrun"
+"original7.nsf" 1 2:43 2 0 "Lukas Eriksson" "Dig Deep or Drown"
+"original8.nsf" 1 2:48 2 0 "Airwe 阿威" "永远的阳台"
+"original9.nsf" 1 0:50 2 0 "keffie" "bazaar chase (galliard for noodle)" "bazaar chase..."
+"Entry010.nsf"  1 2:38 2 1 "dusthillguy" "Jarski is a really great guy / Jarski は本当に良い奴だ" "Jarski..."
+#"Entry054.nsf"  1 3:08 2 0 "kulor" "The Recovery"
 
-ORDER 2 4 7 5 6 3 1
 # ALLCAPS
-MAP "é" "|"
 GAP 2
 RESERVE $C0
+
+# original1.nsf                                            Famitracker
+# original2.nsf                                            Famitracker
+# original3.nsf                                            Famitracker
+# original4.nsf                                            IT2NSF
+# original5.nsf                                            Famitracker
+# original6.nsf                                            OFGS
+# original7.nsf                                            Famitracker
+# original8.nsf                                            Famitracker
+# original9.nsf                                            Famitracker
+# Entry054.nsf                                             Famitracker
+# Entry010.nsf                                             Famitracker
+
+# ranked:
+# 5 - 64 - lukas - nothing but luck 
+# 6 - 54 - kulor - the recovery - too big
+# 9 - 75 - lukas - subdued
+# 11 - 16 - fishyash - coasting
+# 16 - 35 - kff - in space
+# 17 - 25 - lukas - lava trip
+# 21 - 102 - offgao - overrun
+# 27 - 94 - lukas - dig deep
+# 28 - 41 - airwe
+# 29 - 69 - keffie - bazaar
+# 30 - 10 - dusthillguy - jarski
 
 # [NSF filename] [song] [mm:ss] [0-2=PAL method] [0/1=loop] [arist] [track name] [shortened track name (optional)]
 #   Fields are separated by spaces, use enclosing quotes for fields that require internal spaces (e.g. track names)
@@ -22,12 +49,6 @@ RESERVE $C0
 #     - All tracks are assumed NTSC capable, there is no adjustment method for PAL to NTSC
 #     - Dendy playback will always override this with mode 1, since they share pitch tuning with NTSC.
 #   A \ in artist/track names will normally be treated as a newline.
-#
-# RESERVE [address]
-#   Reserve bytes on ZP at or above this address for use by NSFs.
-#   Some engines (e.g. OFGS) like to use both high and low ZP addresses,
-#   so this allows ZENSF to use the middle.
-#   $100/256 indicates no reserve.
 #
 # ALLCAPS
 #   Converts artist/title texts to uppercase. (Applied before MAP.)
