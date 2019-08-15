@@ -415,6 +415,7 @@ base_nmi_:
 
 ; player utilities called by custom.s
 
+.feature string_escapes ; for \xNN support in track name substitutions
 .include "out_info/tracks.inc"
 
 .exportzp TRACK_ORDER_LENGTH
