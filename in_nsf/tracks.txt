@@ -10,7 +10,7 @@
 "Entry010.nsf"  1 2:38 2 1 "dusthillguy" "Jarski is a really great guy / Jarski は本当に良い奴だ" "Jarski..."
 #"Entry054.nsf"  1 3:08 2 0 "kulor" "The Recovery"
 
-# ALLCAPS
+ALLCAPS
 GAP 2
 RESERVE $C0
 

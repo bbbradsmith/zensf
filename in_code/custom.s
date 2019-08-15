@@ -306,7 +306,7 @@ menu_title_redraw:
 	jmp rainbow17
 
 menu_title:
-	lda #SCREEN_Title
+	lda #SCREEN_Upper
 	jsr load_screen
 	jsr menu_title_redraw
 	jsr ffade_in
@@ -376,7 +376,7 @@ menu_info_redraw:
 	jmp rainbow17
 
 menu_info:
-	lda #SCREEN_Info
+	lda #SCREEN_Lower
 	jsr load_screen
 	jsr menu_info_redraw
 	jsr ffade_in
@@ -422,7 +422,7 @@ menu_tracks_redraw:
 	jmp rainbow17
 
 menu_tracks:
-	lda #SCREEN_Tracks
+	lda #SCREEN_Lower
 	jsr load_screen
 	; fill track names
 	LOAD_NMT ($2000+6+(6*32))
@@ -531,7 +531,7 @@ menu_play_redraw:
 	jmp rainbow17
 
 menu_play:
-	lda #SCREEN_Play
+	lda #SCREEN_Upper
 	jsr load_screen
 	LOAD_NMT ($2000+6+(6*32))
 	lda track
