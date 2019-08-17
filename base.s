@@ -917,6 +917,20 @@ load_screen:
 		bcc :-
 	rts
 
+load_screen_aux:
+	asl
+	asl
+	asl
+	tax
+	bit $2002
+	lda #$28
+	sta $2006
+	lda #$00
+	sta $2006
+	lda screen_table+0, X
+	jsr art_prepare_
+	jmp art_load_ppu_1k_
+
 track_index_:
 	tax
 	lda track_order, X

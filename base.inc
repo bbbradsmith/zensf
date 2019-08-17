@@ -66,6 +66,7 @@ PAD_R      = $80
 .global fade_out ; X=speed (0 fastest), fades out, PPU off (clobbers nmt_buffer 32-64, $0D column forbidden)
 .global fade_in ; X=speed (0 fastest), fades in, PPU on (clobbers nmt_buffer 32-64, $0D column forbidden)
 .global load_screen ; A = screen from screen_enums.inc
+.global load_screen_aux ; A = screen from screen_enums.inc, loads only nametable to location $2800
 .global load_track_title ; A = track, out to ptr
 .global load_track_title_short ; A = track, out to ptr
 .global load_track_artist ; A = track, out to ptr

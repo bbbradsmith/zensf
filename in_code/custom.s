@@ -308,6 +308,8 @@ menu_title_redraw:
 menu_title:
 	lda #SCREEN_Upper
 	jsr load_screen
+	lda #SCREEN_Lower
+	jsr load_screen_aux
 	jsr menu_title_redraw
 	jsr ffade_in
 @loop:
