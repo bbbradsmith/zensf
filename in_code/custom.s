@@ -277,18 +277,6 @@ rainbow17:
 
 ; sprite definitions:  [x     y tile attr] 128=end
 
-sprite_brick:  .byte    0,   -1, $59, $02
-               .byte    8,   -1, $5A, $02
-               .byte   16,   -1, $5B, $02
-               .byte   24,   -1, $5C, $02
-               .byte    0,    7, $69, $02
-               .byte    8,    7, $6A, $02
-               .byte   16,    7, $6B, $02
-               .byte   24,    7, $6C, $02
-               .byte    0,   15, $79, $02
-               .byte    8,   15, $7A, $02
-               .byte   16,   15, $7B, $02
-               .byte   24,   15, $7C, $02, 128
 sprite_ballr:  .byte  -12,  -25, $40, $00
                .byte   -4,  -25, $41, $00
                .byte    4,  -25, $60, $C0
@@ -721,9 +709,6 @@ menu_title_redraw:
 	SCROLLED_SPRITE  94,  98, sprite_comp0b
 	SCROLLED_SPRITE  94, 106, sprite_comp1a
 	SCROLLED_SPRITE 106, 111, sprite_comp2a
-	SCROLLED_SPRITE  12, 100, sprite_brick
-	SCROLLED_SPRITE 192,  72, sprite_brick
-	SCROLLED_SPRITE 208, 136, sprite_brick
 	;lda title_pos
 	;asl
 	;asl
