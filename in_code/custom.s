@@ -11,10 +11,12 @@
 .include "../base.inc"
 .export custom_main
 .export custom_nmi
+.export seed
 
 .import nsf_playing ; ramp.s
 
 TRACKS = TRACK_ORDER_LENGTH
+STARS = 4*3 ; must be multiple of 3
 
 .include "../out_info/screen_enum.inc"
 
@@ -23,16 +25,30 @@ TRACKS = TRACK_ORDER_LENGTH
 ; this is not high performance code anyway
 
 .segment "CUSTOM_RAM"
-gamepad_last: .res 1
-gamepad_new:  .res 1
-title_pos:    .res 1
-track:        .res 1
-paused:       .res 1
+gamepad_last:   .res 1
+gamepad_new:    .res 1
+title_pos:      .res 1
+track:          .res 1
+paused:         .res 1
+sx:             .res 2
+sy:             .res 2
+sa:             .res 1
+claw_anim_pos:  .res 1
+claw_anim_wait: .res 1
+seed:           .res 2
+star_x:         .res STARS
+star_y:         .res STARS
 
 .segment "CUSTOM"
 
 custom_main:
+	jsr prng_init
+	jsr stars_init
 	jsr sfx_setup
+	lda #SCREEN_Upper
+	jsr load_screen
+	lda #SCREEN_Lower
+	jsr load_screen_aux
 	jmp menu_title
 
 custom_nmi:
@@ -193,6 +209,27 @@ gamepad_wait_release:
 		bne :-
 	rts
 
+prng_init: ; makes sure seed is not 0
+	lda seed+0
+	ora seed+1
+	beq :+
+		inc seed+0
+	:
+	rts
+
+prng:
+	lda seed+0
+.repeat 8
+	asl
+	rol seed+1
+	bcc :+
+		eor #$2D
+	:
+.endrepeat
+	sta seed+0
+	cmp #0
+	rts
+
 rainbow17:
 	; only do this 1/8 frames
 	lda nmi_count
@@ -239,17 +276,104 @@ rainbow17:
 .endmacro
 
 ; sprite definitions:  [x     y tile attr] 128=end
-sprite_title:  .byte    0,    0, $0C, $00
-               .byte   55,    0, $0C, $40, 128
-sprite_tracks: .byte   -3,    0, $0C, $00, 128
-sprite_info0:  .byte    0,   -2, $10, $00, 128
-sprite_info1:  .byte    1,   -2, $11, $00, 128
-sprite_info2:  .byte    1,   -2, $12, $00, 128
-sprite_info3:  .byte    1,   -2, $13, $00, 128
-sprite_infu0:  .byte    0,   -1, $10, $01, 128
-sprite_infu1:  .byte    1,   -1, $11, $01, 128
-sprite_infu2:  .byte    1,   -1, $12, $01, 128
-sprite_infu3:  .byte    1,   -1, $13, $01, 128
+
+sprite_brick:  .byte    0,   -1, $59, $02
+               .byte    8,   -1, $5A, $02
+               .byte   16,   -1, $5B, $02
+               .byte   24,   -1, $5C, $02
+               .byte    0,    7, $69, $02
+               .byte    8,    7, $6A, $02
+               .byte   16,    7, $6B, $02
+               .byte   24,    7, $6C, $02
+               .byte    0,   15, $79, $02
+               .byte    8,   15, $7A, $02
+               .byte   16,   15, $7B, $02
+               .byte   24,   15, $7C, $02, 128
+sprite_ballr:  .byte  -12,  -25, $40, $00
+               .byte   -4,  -25, $41, $00
+               .byte    4,  -25, $60, $C0
+               .byte  -12,  -17, $50, $00
+               .byte   -4,  -17, $51, $00
+               .byte    4,  -17, $50, $40
+               .byte  -12,   -9, $60, $00
+               .byte   -4,   -9, $41, $80
+               .byte    4,   -9, $60, $40, 128
+sprite_bally:  .byte  -12,  -25, $40, $03
+               .byte   -4,  -25, $41, $03
+               .byte    4,  -25, $60, $C3
+               .byte  -12,  -17, $50, $03
+               .byte   -4,  -17, $51, $03
+               .byte    4,  -17, $50, $43
+               .byte  -12,   -9, $60, $03
+               .byte   -4,   -9, $41, $83
+               .byte    4,   -9, $60, $43, 128
+sprite_box:    .byte  -12,  -25, $44, $01
+               .byte   -4,  -25, $45, $01
+               .byte    4,  -25, $46, $01
+               .byte  -12,  -17, $54, $03
+               .byte   -4,  -17, $55, $01
+               .byte    4,  -17, $56, $01
+               .byte  -12,   -9, $64, $01
+               .byte   -4,   -9, $65, $01
+               .byte    4,   -9, $66, $01, 128
+sprite_cone:   .byte   -4,  -33, $48, $02
+               .byte   -8,  -25, $57, $01
+               .byte    0,  -25, $57, $41
+               .byte  -12,  -17, $67, $01
+               .byte   -4,  -17, $68, $01
+               .byte    4,  -17, $67, $41
+               .byte  -12,   -9, $77, $01
+               .byte   -4,   -9, $68, $01
+               .byte    4,   -9, $77, $41
+               .byte   -4,  -28, $47, $80, 128
+sprite_armu:   .byte    0,   -4, $39, $00
+               .byte   -8,  -18, $18, $00
+               .byte   -8,  -10, $28, $00
+               .byte   -8,   -2, $38, $00, 128
+sprite_claw0u: .byte   -5,  -26, $20, $00 ; closed claw
+               .byte   -5,  -34, $10, $00
+               .byte  -13,  -26, $20, $40
+               .byte  -13,  -34, $10, $40, 128
+sprite_claw1u: .byte   -5,  -31, $21, $00 ; open claw
+               .byte   -4,  -39, $11, $00
+               .byte  -13,  -31, $21, $40
+               .byte  -14,  -39, $11, $40, 128
+sprite_claw2u: .byte   -9,  -26, $23, $00 ; spin 1
+               .byte   -9,  -34, $13, $00, 128
+sprite_claw3u: .byte   -9,  -26, $22, $00 ; spin 2
+               .byte   -9,  -34, $12, $00, 128
+sprite_claw4u: .byte   -9,  -26, $23, $40 ; spin 3
+               .byte   -9,  -34, $13, $40, 128
+sprite_armd:   .byte    0,   -4, $39, $80
+               .byte   -8,   10, $18, $80
+               .byte   -8,    2, $28, $80
+               .byte   -8,   -6, $38, $80, 128
+sprite_claw0d: .byte   -5,   18, $20, $80
+               .byte   -5,   26, $10, $80
+               .byte  -13,   18, $20, $C0
+               .byte  -13,   26, $10, $C0, 128
+sprite_claw1d: .byte   -5,   23, $21, $80
+               .byte   -4,   31, $11, $80
+               .byte  -13,   23, $21, $C0
+               .byte  -14,   31, $11, $C0, 128
+sprite_claw2d: .byte   -9,   18, $23, $80
+               .byte   -9,   26, $13, $80, 128
+sprite_claw3d: .byte   -9,   18, $22, $80
+               .byte   -9,   26, $12, $80, 128
+sprite_claw4d: .byte   -9,   18, $23, $C0
+               .byte   -9,   26, $13, $C0, 128
+sprite_belt0:  .byte    0,   -1, $49, $03, 128
+sprite_belt1:  .byte    0,   -1, $4A, $03, 128
+sprite_belt2:  .byte    0,   -1, $4B, $03, 128
+sprite_comp0a: .byte    0,   -1, $15, $00, 128
+sprite_comp1a: .byte    0,   -1, $16, $00, 128
+sprite_comp2a: .byte    0,   -1, $17, $00, 128
+sprite_comp0b: .byte    0,   -2, $25, $00, 128
+sprite_comp1b: .byte    0,   -2, $26, $00, 128
+sprite_comp2b: .byte    0,   -2, $27, $00, 128
+sprite_star0:  .byte    0,   -1, $35, $00, 128
+sprite_star1:  .byte    0,   -1, $36, $00, 128
+sprite_star2:  .byte    0,   -1, $37, $00, 128
 sprite_num0:   .byte    0,   -1, $00, $00, 128
 sprite_num1:   .byte    0,   -1, $01, $00, 128
 sprite_num2:   .byte    0,   -1, $02, $00, 128
@@ -264,6 +388,19 @@ sprite_colon:  .byte    0,   -1, $0A, $00, 128
 sprite_play:   .byte    0,   -1, $0B, $00, 128
 sprite_loop:   .byte    0,   -1, $0C, $00, 128
 sprite_pause:  .byte    0,   -1, $0D, $00, 128
+
+; TODO get rid of these
+sprite_title:  .byte    0,    0, $0C, $00
+               .byte   55,    0, $0C, $40, 128
+sprite_tracks: .byte   -3,    0, $0C, $00, 128
+sprite_info0:  .byte    0,   -2, $10, $00, 128
+sprite_info1:  .byte    1,   -2, $11, $00, 128
+sprite_info2:  .byte    1,   -2, $12, $00, 128
+sprite_info3:  .byte    1,   -2, $13, $00, 128
+sprite_infu0:  .byte    0,   -1, $10, $01, 128
+sprite_infu1:  .byte    1,   -1, $11, $01, 128
+sprite_infu2:  .byte    1,   -1, $12, $01, 128
+sprite_infu3:  .byte    1,   -1, $13, $01, 128
 
 sprite_num_table:
 .word sprite_num0
@@ -288,28 +425,321 @@ load_sprite_num:
 	sta ptr+1
 	rts
 
+scrolled_sprite:
+	;   in: ptr = sprite data
+	;       sx = 16-bit sprite x
+	;       sy = 16-bit sprite y
+	;       sa = 8-bit attribute XOR
+	;   out: oam_pos
+	;   clobbers: A, X, Y, ptr, sy
+	ldy #0
+	ldx oam_pos
+	beq @finish ; OAM full
+	; adjust Y for scroll
+	lda sy+0
+	sec
+	sbc ppu_scroll_y
+	sta sy+0
+	lda sy+1
+	sbc #0 ; ignoring high bit of scroll_y (would be in ppu_ctrl), don't need it for this project
+	sta sy+1
+@tile:
+	; generate X coordinate
+	lda (ptr), Y
+	cmp #128
+	beq @finish
+	clc
+	adc sx+0
+	sta oam+3, X
+	; check if 16-bit X-coordinate was onscreen
+	lda (ptr), Y
+	iny
+	ora #$7F
+	bmi :+
+		lda #0
+	:
+	adc sx+1
+	beq :+
+		iny
+		iny
+		iny
+		jmp @next_tile
+	:
+	; generate Y coordinate
+	lda (ptr), Y
+	clc
+	adc sy+0
+	sta oam+0, X
+	; check if 16-bit Y coordinate was onscreen
+	lda (ptr), Y
+	iny
+	ora #$7F
+	bmi :+
+		lda #0
+	:
+	adc sy+1
+	beq :+
+		lda #$FF
+		sta oam+0, X ; keep offscreen
+		iny
+		iny
+		jmp @next_tile
+	:
+	; tile
+	lda (ptr), Y
+	iny
+	sta oam+1, X
+	; attribute
+	lda (ptr), Y
+	iny
+	eor sa
+	sta oam+2, X
+@next_tile:
+	inx
+	inx
+	inx
+	inx
+	stx oam_pos
+	bne @tile
+@finish:
+	rts
+
+; for sprites in a fixed location
+.macro SCROLLED_SPRITE coord_sx, coord_sy, ptr_sprite
+	lda #<coord_sx
+	sta sx+0
+	lda #>coord_sy
+	sta sx+1
+	lda #<coord_sy
+	sta sy+0
+	lda #>coord_sy
+	sta sy+1
+	lda #<ptr_sprite
+	sta ptr+0
+	lda #>ptr_sprite
+	sta ptr+1
+	jsr scrolled_sprite
+.endmacro
+
+; claw animation
+
+sprite_claw_table:
+.word sprite_claw0u ; closed
+.word sprite_claw0d
+.word sprite_claw1u ; open
+.word sprite_claw1d
+.word sprite_claw2u ; spin 1
+.word sprite_claw2d
+.word sprite_claw3u ; spin 2
+.word sprite_claw3d
+.word sprite_claw4u ; spin 3
+.word sprite_claw4d
+.word sprite_armu
+.word sprite_armd
+
+claw_anim:
+            .byte 255, 255
+claw_anim0: .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255
+claw_anim1: .byte 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 255
+claw_anim2: .byte 0, 0, 2, 3, 4, 0, 0, 255
+claw_anim3: .byte 0, 0, 0, 0, 0, 255
+
+claw_anim_start:
+.byte claw_anim0 - claw_anim
+.byte claw_anim1 - claw_anim
+.byte claw_anim2 - claw_anim
+.byte claw_anim3 - claw_anim
+
+CLAW_SPEED = 7 ; frames per tick
+
+claw_tick:
+	lda claw_anim_wait
+	and #$7F
+	beq :+
+		dec claw_anim_wait
+		rts
+	:
+	lda #CLAW_SPEED
+	ora claw_anim_wait
+	sta claw_anim_wait
+	; TODO incomplete ???
+
+	ldx claw_anim_pos
+	lda claw_anim, X
+	cmp #255
+	bne :+
+		; choose random animation
+		; lda claw_anim_start
+		sta claw_anim_pos
+		; random flip of claw_anim
+	:
+	rts
+
+claw_draw:
+	; draw arm in up or down position
+	lda claw_anim_wait ; & $80 = down
+	rol
+	php ; save carry
+	lda #0
+	rol
+	asl
+	tax
+	lda sprite_claw_table+(5*2)+0, X
+	sta ptr+0
+	lda sprite_claw_table+(5*2)+1, X
+	sta ptr+1
+	lda #74
+	sta sx+0
+	lda #96
+	sta sy+0
+	lda #0
+	sta sx+1
+	sta sy+1
+	jsr scrolled_sprite
+	; draw claw
+	; sx = 74
+	lda #96
+	sta sy+0
+	lda #0
+	sta sy+1
+	plp ; carry = claw_anim_wait & 80 = down
+	lda claw_anim_pos
+	rol ; * 2 + up/down
+	asl ; * 2 for pointer
+	tax
+	lda sprite_claw_table+0, X
+	sta ptr+0
+	lda sprite_claw_table+1, X
+	sta ptr+1
+	jmp scrolled_sprite
+
+; stars
+
+star_randy: ; X = star, randomizes star_y
+	jsr prng
+	sta star_y, X
+	rts
+
+stars_init:
+	ldx #0
+	:
+		jsr star_randy
+		; star_x = (x * 105) % 256
+		; 105 = 3*5*7 is relatively prime to 256 (hits all possible points)
+		; but also close to a "golden angle" division of 256 (~98)
+		; and also a multiple of 21 (~256/12) which might evenly distribute 12 stars
+		txa
+		sta star_x, X
+		asl star_x, X
+		asl star_x, X
+		asl star_x, X
+		clc
+		adc star_x, X
+		asl star_x, X
+		asl star_x, X
+		clc
+		adc star_x, X
+		asl star_x, X
+		clc
+		adc star_x, X
+		sta star_x, X
+		inx
+		cpx #STARS
+		bcc :-
+	rts
+
+stars_tick:
+	jsr prng_init ; probably unnecessary, but just in case
+	ldy #0
+	ldx #0
+	@loop: ; 3 passes: stars that move 1x, 2x, 3x
+		dec star_x, X
+		bne :+
+			jsr star_randy
+		:
+		inx
+		cpx #STARS
+		bcc @loop
+	tya
+	clc
+	adc #(STARS/3)
+	tax
+	tay
+	cpy #STARS
+	bcc @loop
+	rts
+
+stars_draw:
+	ldy oam_pos
+	ldx #0
+	:
+		cpy #0
+		beq :+
+		txa
+		lsr
+		lsr ; X/4
+		.assert (STARS=12), error, "Stars colour"
+		clc
+		adc #$35
+		sta oam+1, Y ; tile
+		lda star_x, X
+		sta oam+3, Y ; X
+		lda star_y, X
+		sec
+		sbc ppu_scroll_y
+		sta oam+0, Y ; Y
+		lda #$22 ; behind background, palette 2
+		sta oam+2, Y ; attribute
+		iny
+		iny
+		iny
+		iny
+		inx
+		cpx #STARS
+		bcc :-
+	:
+	sty oam_pos
+	rts
+
+; common animation
+
+common_tick:
+	jsr stars_tick
+	rts
+
 ; menu screens
 
+menu_title_tick = common_tick
+
 menu_title_redraw:
+	;inc ppu_scroll_y ; HACK
 	jsr sprite_begin
-	lda title_pos
-	asl
-	asl
-	asl
-	asl
-	clc
-	adc #(15*8)
-	tay
-	ldx #(12*8)
-	SPRITE sprite_title
+	lda #0
+	sta sa ; clear sprite attribute xor
+	SCROLLED_SPRITE  74,  96, sprite_armu
+	SCROLLED_SPRITE  74,  96, sprite_claw0u
+	SCROLLED_SPRITE  94,  98, sprite_comp0b
+	SCROLLED_SPRITE  94, 106, sprite_comp1a
+	SCROLLED_SPRITE 106, 111, sprite_comp2a
+	SCROLLED_SPRITE  12, 100, sprite_brick
+	SCROLLED_SPRITE 192,  72, sprite_brick
+	SCROLLED_SPRITE 208, 136, sprite_brick
+	;lda title_pos
+	;asl
+	;asl
+	;asl
+	;asl
+	;clc
+	;adc #(15*8)
+	;tay
+	;ldx #(12*8)
+	;SPRITE sprite_title
+	jsr stars_draw
 	jsr sprite_finish
-	jmp rainbow17
+	;jsr rainbow17
+	rts
 
 menu_title:
-	lda #SCREEN_Upper
-	jsr load_screen
-	lda #SCREEN_Lower
-	jsr load_screen_aux
 	jsr menu_title_redraw
 	jsr ffade_in
 @loop:
@@ -333,6 +763,7 @@ menu_title:
 		jmp menu_tracks
 	:
 @finish:
+	jsr menu_title_tick
 	jsr menu_title_redraw
 	jsr ppu_update
 	jmp @loop
@@ -378,8 +809,6 @@ menu_info_redraw:
 	jmp rainbow17
 
 menu_info:
-	lda #SCREEN_Lower
-	jsr load_screen
 	jsr menu_info_redraw
 	jsr ffade_in
 @loop:
@@ -424,8 +853,6 @@ menu_tracks_redraw:
 	jmp rainbow17
 
 menu_tracks:
-	lda #SCREEN_Lower
-	jsr load_screen
 	; fill track names
 	LOAD_NMT ($2000+6+(6*32))
 	lda #0
@@ -533,8 +960,6 @@ menu_play_redraw:
 	jmp rainbow17
 
 menu_play:
-	lda #SCREEN_Upper
-	jsr load_screen
 	LOAD_NMT ($2000+6+(6*32))
 	lda track
 	jsr load_track_artist

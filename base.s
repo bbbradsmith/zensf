@@ -34,6 +34,7 @@
 
 .import custom_main
 .import custom_nmi
+.import seed ; preserve random seed across resets
 
 .export base_nmi
 .export base_banks
@@ -213,18 +214,33 @@ base_main_:
 	:
 		bit $2002
 		bpl :-
+	; randomness across resets
+	lda seed+0
+	pha
+	ldy seed+1
+	.assert ((seed+0) < $100) || ((seed+0) >= $200), error, "Random seed on stack? Need a temporary place for it at reset."
 	; clear memory
-	;ldx #$00
+	ldx #$00
 	txa
 	:
 		sta  $00, X
-		sta $100, X
+		;sta $100, X
 		sta $200, X
 		sta $300, X
 		sta $400, X
 		sta $500, X
 		sta $600, X
 		sta $700, X
+		inx
+		bne :-
+	; restore random seed
+	sty seed+1
+	pla
+	sta seed+0
+	;ldx #0
+	txa
+	:
+		sta $100, X
 		inx
 		bne :-
 	; warmup frame 2
@@ -610,7 +626,8 @@ ppu_off:
 	sta ppu_mask
 	jmp ppu_update
 ppu_on:
-	lda #%00011110
+	;lda #%00011110
+	lda #%00011000 ; clip left side
 	sta ppu_mask
 	;jmp ppu_update
 ppu_update:
