@@ -11,6 +11,7 @@
 .include "../base.inc"
 .export custom_main
 .export custom_nmi
+.export custom_nmt_update
 .export seed
 
 .import nsf_playing ; ramp.s
@@ -33,16 +34,19 @@ paused:         .res 1
 sx:             .res 2
 sy:             .res 2
 sa:             .res 1
+sync:           .res 1 ; synchronizes the animations
 claw_anim_pos:  .res 1
 claw_anim_wait: .res 1
 seed:           .res 2
 star_x:         .res STARS
 star_y:         .res STARS
+brick:          .res 3
 
 .segment "CUSTOM"
 
 custom_main:
 	jsr prng_init
+	jsr bricks_init
 	jsr stars_init
 	jsr sfx_setup
 	lda #SCREEN_Upper
@@ -182,6 +186,61 @@ sfx_cursor_act:
 	sta nmt_addr+1
 .endmacro
 
+custom_nmt_update:
+	; called from NMI,
+	; but can also be used while rendering is off (and nmi_ready=0)
+	; to push a pending nametable update.
+	lda ppu_ctrl ; sets direction of update
+	sta $2000
+	bit $2002
+	lda nmt_addr+1
+	sta $2006
+	lda nmt_addr+0
+	sta $2006
+	tsx
+	txa
+	ldx #<(nmt_buffer-1)
+	txs
+	tax
+	; X = stack pointer
+	; Y = nmt_count
+	; stack points at first nmt_buffer byte
+	cpy #255
+	beq @nmt_brick ; custom modification for updating animated bricks
+	:
+		pla
+		sta $2007
+		dey
+		bne :-
+	jmp @nmt_update_end
+@nmt_brick: ; animated brick is 3 rows of 4 tiles
+	ldy #4
+	:
+		pla
+		sta $2007
+		dey
+		bne :-
+	.repeat 2, I
+		lda nmt_addr+0
+		clc
+		adc #(I+1)*32
+		tay
+		lda nmt_addr+1
+		adc #0
+		sta $2006
+		sty $2006
+		ldy #4
+		:
+			pla
+			sta $2007
+			dey
+			bne :-
+	.endrepeat
+@nmt_update_end:
+	txs ; restore stack
+	sty nmt_count ; = 0
+	rts
+
 ffade_in: ; fastest fade_in
 	ldx #0
 	jmp fade_in
@@ -217,17 +276,31 @@ prng_init: ; makes sure seed is not 0
 	:
 	rts
 
-prng:
-	lda seed+0
-.repeat 8
-	asl
-	rol seed+1
-	bcc :+
-		eor #$2D
-	:
-.endrepeat
+prng: ; random value in A, clobbers Y
+	; https://github.com/bbbradsmith/prng_6502
+	lda seed+1
+	tay
+	lsr
+	lsr
+	lsr
+	sta seed+1
+	lsr
+	eor seed+1
+	lsr
+	eor seed+1
+	eor seed+0
+	sta seed+1
+	tya
 	sta seed+0
-	cmp #0
+	asl
+	eor seed+0
+	asl
+	eor seed+0
+	asl
+	asl
+	asl
+	eor seed+0
+	sta seed+0
 	rts
 
 rainbow17:
@@ -689,10 +762,120 @@ stars_draw:
 	sty oam_pos
 	rts
 
+brick_up:
+.byte $AC, $AD, $AE, $AF
+.byte $BC, $BD, $BE, $BF
+.byte $CC, $CD, $CE, $CF
+
+brick_down:
+.byte $10, $11, $12, $13
+.byte $14, $15, $8E, $8F
+.byte $9C, $9D, $9E, $9F
+
+brick_nmt0:
+.byte <$21A1
+.byte <$2138
+.byte <$221B
+brick_nmt1:
+.byte >$21A1
+.byte >$2138
+.byte >$221B
+
+brick_speed:
+.byte 11,13,7
+
+brick_tick: ; tick brick X
+	inc brick, X
+	lda brick, X
+	and #$7F
+	cmp brick_speed, X
+	bcc :+
+		lda brick, X
+		eor #$80
+		and #$80
+		sta brick, X
+	:
+	rts
+
+bricks_tick:
+	; ticks 3 bricks on frames 0, 3, 6
+	lda sync
+	and #3
+	bne:+
+		lda sync
+		lsr
+		lsr
+		and #3
+		beq :+
+		tax
+		dex
+		jsr brick_tick
+	:
+	rts
+
+brick_draw: ; redraw brick X
+	lda brick_nmt0, X
+	sta nmt_addr+0
+	lda brick_nmt1, X
+	sta nmt_addr+1
+	ldy #0
+	lda brick, X
+	bmi @brick_down
+@brick_up:
+	:
+		lda brick_up, Y
+		sta nmt_buffer, Y
+		iny
+		cpy #12
+		bcc :-
+	jmp @brick_done
+@brick_down:
+	:
+		lda brick_down, Y
+		sta nmt_buffer, Y
+		iny
+		cpy #12
+		bcc :-
+	;jmp @brick_done
+@brick_done:
+	lda #255
+	sta nmt_count
+	rts
+
+bricks_draw:
+	lda sync
+	and #3
+	bne:+
+		lda sync
+		lsr
+		lsr
+		and #3
+		beq :+
+		tax
+		dex
+		jsr brick_draw
+	:
+	rts
+
+bricks_init:
+	ldx #0
+	:
+		jsr prng
+		sta brick, X
+		jsr brick_tick
+		jsr brick_draw
+		jsr custom_nmt_update
+		inx
+		cpx #3
+		bcc :-
+	rts
+
 ; common animation
 
 common_tick:
+	jsr bricks_tick
 	jsr stars_tick
+	inc sync
 	rts
 
 ; menu screens
@@ -720,6 +903,7 @@ menu_title_redraw:
 	;ldx #(12*8)
 	;SPRITE sprite_title
 	jsr stars_draw
+	jsr bricks_draw
 	jsr sprite_finish
 	;jsr rainbow17
 	rts

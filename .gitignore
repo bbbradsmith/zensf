@@ -3,3 +3,5 @@ out_mod/*.bin
 out_info
 out_build
 temp
+build_notepad.bat
+in_art/*.nss

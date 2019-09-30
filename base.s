@@ -35,6 +35,7 @@
 .import custom_main
 .import custom_nmi
 .import seed ; preserve random seed across resets
+.import custom_nmt_update
 
 .export base_nmi
 .export base_banks
@@ -332,28 +333,8 @@ base_nmi_:
 		; nametables
 		ldy nmt_count
 		beq @ppu_scroll
-		lda ppu_ctrl ; sets direction of update
-		sta $2000
-		lda nmt_addr+1
-		sta $2006
-		lda nmt_addr+0
-		sta $2006
-		tsx
-		txa
-		ldx #<(nmt_buffer-1)
-		txs
-		tax
-		; X = stack pointer
-		; Y = nmt_count
-		; stack points at first nmt_buffer byte
-		:
-			pla
-			sta $2007
-			dey
-			bne :-
-		txs ; restore stack
-		sty nmt_count ; = 0
-	@ppu_scroll:
+			jsr custom_nmt_update ; replaced with a custom routine
+		@ppu_scroll:
 		lda ppu_ctrl
 		sta $2000
 		lda ppu_scroll_x
