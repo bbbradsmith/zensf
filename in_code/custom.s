@@ -46,6 +46,7 @@ brick:          .res 3
 
 custom_main:
 	jsr prng_init
+	jsr claw_init
 	jsr bricks_init
 	jsr stars_init
 	jsr sfx_setup
@@ -271,7 +272,7 @@ gamepad_wait_release:
 prng_init: ; makes sure seed is not 0
 	lda seed+0
 	ora seed+1
-	beq :+
+	bne :+
 		inc seed+0
 	:
 	rts
@@ -395,34 +396,34 @@ sprite_claw0u: .byte   -5,  -26, $20, $00 ; closed claw
                .byte   -5,  -34, $10, $00
                .byte  -13,  -26, $20, $40
                .byte  -13,  -34, $10, $40, 128
-sprite_claw1u: .byte   -5,  -31, $21, $00 ; open claw
-               .byte   -4,  -39, $11, $00
-               .byte  -13,  -31, $21, $40
-               .byte  -14,  -39, $11, $40, 128
+sprite_claw1u: .byte   -5,  -21, $21, $00 ; open claw
+               .byte   -4,  -29, $11, $00
+               .byte  -13,  -21, $21, $40
+               .byte  -14,  -29, $11, $40, 128
 sprite_claw2u: .byte   -9,  -26, $23, $00 ; spin 1
                .byte   -9,  -34, $13, $00, 128
 sprite_claw3u: .byte   -9,  -26, $22, $00 ; spin 2
                .byte   -9,  -34, $12, $00, 128
 sprite_claw4u: .byte   -9,  -26, $23, $40 ; spin 3
                .byte   -9,  -34, $13, $40, 128
-sprite_armd:   .byte    0,   -4, $39, $80
-               .byte   -8,   10, $18, $80
-               .byte   -8,    2, $28, $80
-               .byte   -8,   -6, $38, $80, 128
-sprite_claw0d: .byte   -5,   18, $20, $80
-               .byte   -5,   26, $10, $80
-               .byte  -13,   18, $20, $C0
-               .byte  -13,   26, $10, $C0, 128
-sprite_claw1d: .byte   -5,   23, $21, $80
-               .byte   -4,   31, $11, $80
-               .byte  -13,   23, $21, $C0
-               .byte  -14,   31, $11, $C0, 128
-sprite_claw2d: .byte   -9,   18, $23, $80
-               .byte   -9,   26, $13, $80, 128
-sprite_claw3d: .byte   -9,   18, $22, $80
-               .byte   -9,   26, $12, $80, 128
-sprite_claw4d: .byte   -9,   18, $23, $C0
-               .byte   -9,   26, $13, $C0, 128
+sprite_armd:   .byte    0,   -3, $39, $80
+               .byte   -8,   11, $18, $80
+               .byte   -8,    3, $28, $80
+               .byte   -8,   -5, $38, $80, 128
+sprite_claw0d: .byte   -5,   19, $20, $80
+               .byte   -5,   27, $10, $80
+               .byte  -13,   19, $20, $C0
+               .byte  -13,   27, $10, $C0, 128
+sprite_claw1d: .byte   -5,   14, $21, $80
+               .byte   -4,   22, $11, $80
+               .byte  -13,   14, $21, $C0
+               .byte  -14,   22, $11, $C0, 128
+sprite_claw2d: .byte   -9,   19, $23, $80
+               .byte   -9,   27, $13, $80, 128
+sprite_claw3d: .byte   -9,   19, $22, $80
+               .byte   -9,   27, $12, $80, 128
+sprite_claw4d: .byte   -9,   19, $23, $C0
+               .byte   -9,   27, $13, $C0, 128
 sprite_belt0:  .byte    0,   -1, $49, $03, 128
 sprite_belt1:  .byte    0,   -1, $4A, $03, 128
 sprite_belt2:  .byte    0,   -1, $4B, $03, 128
@@ -600,10 +601,11 @@ sprite_claw_table:
 
 claw_anim:
             .byte 255, 255
-claw_anim0: .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255
-claw_anim1: .byte 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 255
-claw_anim2: .byte 0, 0, 2, 3, 4, 0, 0, 255
-claw_anim3: .byte 0, 0, 0, 0, 0, 255
+claw_anim0: .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255 ; 0 = wait
+claw_anim1: .byte 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 255 ; 1 = grab
+claw_anim2: .byte 0, 0, 2, 3, 4, 0, 0, 0, 0, 0, 255 ; 2 = spin
+claw_anim3: .byte 0, 0, 4, 3, 2, 0, 0, 0, 0, 0, 0, 255 ; 3 = spin reverse
+.assert (*-claw_anim) <= 256, error, "claw_anim data overflow"
 
 claw_anim_start:
 .byte claw_anim0 - claw_anim
@@ -612,6 +614,13 @@ claw_anim_start:
 .byte claw_anim3 - claw_anim
 
 CLAW_SPEED = 7 ; frames per tick
+
+claw_init:
+	lda #0
+	sta claw_anim_wait
+	lda claw_anim_start+0
+	sta claw_anim_pos
+	rts
 
 claw_tick:
 	lda claw_anim_wait
@@ -623,16 +632,33 @@ claw_tick:
 	lda #CLAW_SPEED
 	ora claw_anim_wait
 	sta claw_anim_wait
-	; TODO incomplete ???
-
+	inc claw_anim_pos
 	ldx claw_anim_pos
 	lda claw_anim, X
 	cmp #255
 	bne :+
 		; choose random animation
-		; lda claw_anim_start
+		jsr prng
+		sta claw_anim_pos ; temporary for bit combining
+		asl
+		and claw_anim_pos
+		asl
+		and claw_anim_pos
+		asl
+		and claw_anim_pos
+		and #$80
+		pha ; AND of high 4 bits = flip
+		lda claw_anim_pos
+		lsr
+		lsr
+		and claw_anim_pos ; AND of low 2+2 bits to favour 0
+		and #3
+		tax
+		lda claw_anim_start, X
 		sta claw_anim_pos
-		; random flip of claw_anim
+		pla ; high bit of wait is flip
+		eor claw_anim_wait
+		sta claw_anim_wait
 	:
 	rts
 
@@ -645,9 +671,9 @@ claw_draw:
 	rol
 	asl
 	tax
-	lda sprite_claw_table+(5*2)+0, X
+	lda sprite_claw_table+(5*4)+0, X
 	sta ptr+0
-	lda sprite_claw_table+(5*2)+1, X
+	lda sprite_claw_table+(5*4)+1, X
 	sta ptr+1
 	lda #74
 	sta sx+0
@@ -664,7 +690,8 @@ claw_draw:
 	lda #0
 	sta sy+1
 	plp ; carry = claw_anim_wait & 80 = down
-	lda claw_anim_pos
+	ldx claw_anim_pos
+	lda claw_anim, X
 	rol ; * 2 + up/down
 	asl ; * 2 for pointer
 	tax
@@ -873,6 +900,7 @@ bricks_init:
 ; common animation
 
 common_tick:
+	jsr claw_tick
 	jsr bricks_tick
 	jsr stars_tick
 	inc sync
@@ -887,8 +915,8 @@ menu_title_redraw:
 	jsr sprite_begin
 	lda #0
 	sta sa ; clear sprite attribute xor
-	SCROLLED_SPRITE  74,  96, sprite_armu
-	SCROLLED_SPRITE  74,  96, sprite_claw0u
+	;SCROLLED_SPRITE  74,  96, sprite_armu
+	;SCROLLED_SPRITE  74,  96, sprite_claw0u
 	SCROLLED_SPRITE  94,  98, sprite_comp0b
 	SCROLLED_SPRITE  94, 106, sprite_comp1a
 	SCROLLED_SPRITE 106, 111, sprite_comp2a
@@ -902,8 +930,9 @@ menu_title_redraw:
 	;tay
 	;ldx #(12*8)
 	;SPRITE sprite_title
-	jsr stars_draw
+	jsr claw_draw
 	jsr bricks_draw
+	jsr stars_draw
 	jsr sprite_finish
 	;jsr rainbow17
 	rts
