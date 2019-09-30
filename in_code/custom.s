@@ -41,12 +41,15 @@ seed:           .res 2
 star_x:         .res STARS
 star_y:         .res STARS
 brick:          .res 3
+comp_col:       .res 1
+comp_spr:       .res 1
 
 .segment "CUSTOM"
 
 custom_main:
 	jsr prng_init
 	jsr claw_init
+	jsr comp_init
 	jsr bricks_init
 	jsr stars_init
 	jsr sfx_setup
@@ -789,6 +792,8 @@ stars_draw:
 	sty oam_pos
 	rts
 
+; bricks
+
 brick_up:
 .byte $AC, $AD, $AE, $AF
 .byte $BC, $BD, $BE, $BF
@@ -897,10 +902,166 @@ bricks_init:
 		bcc :-
 	rts
 
+; computer lights
+
+; comp_col = palette
+; comp_spr = sprite
+; stored as: %33.22.11 (. bit for carry padding)
+
+comp_packed3: ; A = packed value to increment all 3 fields randomly by 0,1,2, result of 3/4 wraps back to 0/1
+	sta temp+0
+	jsr prng
+	and #%01001001 ; +1 or +0 each
+	clc
+	adc temp+0
+	sta temp+0
+	jsr prng
+	and #%01001001 ; +1 or +0 each, again
+	clc
+	adc temp+0
+	sta temp+0
+	ror
+	lsr
+	and #%01001001 ; 4 == carry, low 2 bits will be 0 so just add it back in to map 4->1
+	clc
+	adc temp+0
+	sta temp+0
+	and #%01001001 ; map 3 to 0...
+	asl
+	eor temp+0
+	and #%10010010
+	sta temp+1
+	lsr
+	ora temp+1 ; %11 if 1 or 2 (keep), %00 if 0 or 3 (wrap to 0)
+	and temp+0
+	rts
+
+comp_cycle:
+	;lda comp_col
+	;jsr comp_packed3
+	jsr prng ; randomly use all 4 palettes
+	sta comp_col
+	lda comp_spr
+	jsr comp_packed3 ; randomly set 0,1,2 only
+	sta comp_spr
+	rts
+
+comp_init:
+	lda #0
+	sta comp_col
+	sta comp_spr
+	ldx #4
+	:
+		jsr comp_cycle ; 4 random cycles for random starting state
+		dex
+		bne :-
+	rts
+
+comp_tick:
+	lda sync
+	;and #63
+	;cmp #62
+	and #15
+	cmp #6
+	bne :+
+		jsr comp_cycle
+	:
+	rts
+
+sprite_compa_table:
+.word sprite_comp0a
+.word sprite_comp1a
+.word sprite_comp2a
+
+sprite_compb_table:
+.word sprite_comp0b
+.word sprite_comp1b
+.word sprite_comp2b
+
+comp_draw:
+	; top left pair
+	lda #<94
+	sta sx+0
+	lda #<98
+	sta sy+0
+	lda #0
+	sta sx+1
+	sta sy+1
+	lda comp_col
+	and #3
+	sta sa
+	lda comp_spr
+	asl
+	and #(3<<1)
+	tax
+	lda sprite_compb_table+0, X
+	sta ptr+0
+	lda sprite_compb_table+1, X
+	sta ptr+1
+	jsr scrolled_sprite
+	; bottom left
+	;lda #<94
+	;sta sx+0
+	lda #<106
+	sta sy+0
+	lda #0
+	;sta sx+1
+	sta sy+1
+	lda comp_col
+	lsr
+	lsr
+	lsr
+	and #3
+	sta sa
+	lda comp_spr
+	lsr
+	lsr
+	and #(3<<1)
+	tax
+	lda sprite_compa_table+0, X
+	sta ptr+0
+	lda sprite_compa_table+1, X
+	sta ptr+1
+	jsr scrolled_sprite
+	; bottom right
+	lda #<106
+	sta sx+0
+	lda #<111
+	sta sy+0
+	lda #0
+	;sta sx+1
+	sta sy+1
+	lda comp_col
+	rol
+	rol
+	rol
+	and #3
+	sta sa
+	lda comp_spr
+	rol
+	rol
+	rol
+	asl
+	and #(3<<1)
+	tax
+	lda sprite_compa_table+0, X
+	sta ptr+0
+	lda sprite_compa_table+1, X
+	sta ptr+1
+	jsr scrolled_sprite
+	; return sprite attribute XOR to 0
+	lda #0
+	sta sa
+	;SCROLLED_SPRITE  94,  98, sprite_comp0b
+	;SCROLLED_SPRITE  94, 106, sprite_comp1a
+	;SCROLLED_SPRITE 106, 111, sprite_comp2a
+	rts
+
 ; common animation
 
 common_tick:
 	jsr claw_tick
+	jsr comp_tick
 	jsr bricks_tick
 	jsr stars_tick
 	inc sync
@@ -915,11 +1076,6 @@ menu_title_redraw:
 	jsr sprite_begin
 	lda #0
 	sta sa ; clear sprite attribute xor
-	;SCROLLED_SPRITE  74,  96, sprite_armu
-	;SCROLLED_SPRITE  74,  96, sprite_claw0u
-	SCROLLED_SPRITE  94,  98, sprite_comp0b
-	SCROLLED_SPRITE  94, 106, sprite_comp1a
-	SCROLLED_SPRITE 106, 111, sprite_comp2a
 	;lda title_pos
 	;asl
 	;asl
@@ -931,6 +1087,7 @@ menu_title_redraw:
 	;ldx #(12*8)
 	;SPRITE sprite_title
 	jsr claw_draw
+	jsr comp_draw
 	jsr bricks_draw
 	jsr stars_draw
 	jsr sprite_finish
