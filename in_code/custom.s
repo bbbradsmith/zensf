@@ -43,15 +43,18 @@ star_y:         .res STARS
 brick:          .res 3
 comp_col:       .res 1
 comp_spr:       .res 1
+belt_x:         .res 1
+belt_y:         .res 1
+belt_time:      .res 1
+item_xl:        .res 2
+item_xh:        .res 2
+item_y:         .res 2
+item_time:      .res 1
 
 .segment "CUSTOM"
 
 custom_main:
-	jsr prng_init
-	jsr claw_init
-	jsr comp_init
-	jsr bricks_init
-	jsr stars_init
+	jsr common_init
 	jsr sfx_setup
 	lda #SCREEN_Upper
 	jsr load_screen
@@ -1052,19 +1055,129 @@ comp_draw:
 	; return sprite attribute XOR to 0
 	lda #0
 	sta sa
-	;SCROLLED_SPRITE  94,  98, sprite_comp0b
-	;SCROLLED_SPRITE  94, 106, sprite_comp1a
-	;SCROLLED_SPRITE 106, 111, sprite_comp2a
+	rts
+
+; belt and items
+
+belt_init: ; random starting position
+	jsr prng
+	and #63
+	tax
+	inx
+	:
+		jsr belt_tick
+		dex
+		bne :-
+	rts
+
+belt_tick:
+	inc belt_x
+	lda belt_x
+	cmp #72
+	bcc :+
+		lda item_y+0
+		clc
+		adc belt_y
+		sta item_y+0
+		lda item_y+1
+		clc
+		adc belt_y
+		sta item_y+1
+		lda #0
+		sta belt_x
+		sta belt_y
+		sta belt_time
+		rts
+	:
+	ldy belt_time
+	iny
+	iny
+	cpy #(3*2)
+	bcc :+
+		ldy #0
+		inc belt_y
+	:
+	sty belt_time
+	rts
+
+sprite_belt_table:
+.word sprite_belt0
+.word sprite_belt1
+.word sprite_belt2
+
+belt_draw:
+	lda belt_x
+	sta sx+0
+	lda #0
+	sta sx+1
+	lda belt_y
+	clc
+	adc #<214
+	sta sy+0
+	lda #0
+	rol
+	sta sy+1
+	:
+		ldx belt_time
+		lda sprite_belt_table+0, X
+		sta ptr+0
+		lda sprite_belt_table+1, X
+		sta ptr+1
+		lda sy+1
+		pha
+		lda sy+0
+		pha
+		jsr scrolled_sprite ; clobbers sy, but not sx
+		pla ; next belt at sy+24
+		clc
+		adc #<24
+		sta sy+0
+		pla
+		adc #>24
+		sta sy+1
+		lda sx+0 ; next belt at sx+72
+		clc
+		adc #72
+		sta sx+0
+		bcc :- ; repeat until belt is offscreen
 	rts
 
 ; common animation
 
+common_init:
+	jsr prng_init
+	jsr claw_init
+	jsr comp_init
+	jsr bricks_init
+	jsr belt_init
+	jsr stars_init
+	rts
+
 common_tick:
+	lda sync
+	and #3
+	bne :+
+		inc ppu_scroll_y ; HACK test
+	:
 	jsr claw_tick
 	jsr comp_tick
 	jsr bricks_tick
+	jsr belt_tick
 	jsr stars_tick
+	;jsr rainbow17
 	inc sync
+	rts
+
+common_draw:
+	jsr sprite_begin
+	lda #0
+	sta sa ; clear sprite attribute xor
+	jsr claw_draw
+	jsr comp_draw
+	jsr bricks_draw
+	jsr stars_draw
+	jsr belt_draw
+	jsr sprite_finish
 	rts
 
 ; menu screens
@@ -1072,27 +1185,7 @@ common_tick:
 menu_title_tick = common_tick
 
 menu_title_redraw:
-	;inc ppu_scroll_y ; HACK
-	jsr sprite_begin
-	lda #0
-	sta sa ; clear sprite attribute xor
-	;lda title_pos
-	;asl
-	;asl
-	;asl
-	;asl
-	;clc
-	;adc #(15*8)
-	;tay
-	;ldx #(12*8)
-	;SPRITE sprite_title
-	jsr claw_draw
-	jsr comp_draw
-	jsr bricks_draw
-	jsr stars_draw
-	jsr sprite_finish
-	;jsr rainbow17
-	rts
+	jmp common_draw
 
 menu_title:
 	jsr menu_title_redraw
