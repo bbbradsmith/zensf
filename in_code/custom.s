@@ -18,6 +18,7 @@
 
 TRACKS = TRACK_ORDER_LENGTH
 STARS = 4*3 ; must be multiple of 3
+ITEMS = 3
 
 .include "../out_info/screen_enum.inc"
 
@@ -46,10 +47,13 @@ comp_spr:       .res 1
 belt_x:         .res 1
 belt_y:         .res 1
 belt_time:      .res 1
-item_xl:        .res 2
-item_xh:        .res 2
-item_y:         .res 2
-item_time:      .res 1
+item_xl:        .res ITEMS
+item_xh:        .res ITEMS
+item_y:         .res ITEMS
+item_spr:       .res ITEMS
+item_time:      .res ITEMS
+item_next:      .res 1
+item_last:      .res 1
 
 .segment "CUSTOM"
 
@@ -384,16 +388,16 @@ sprite_box:    .byte  -12,  -25, $44, $01
                .byte  -12,   -9, $64, $01
                .byte   -4,   -9, $65, $01
                .byte    4,   -9, $66, $01, 128
-sprite_cone:   .byte   -4,  -33, $48, $02
-               .byte   -8,  -25, $57, $01
-               .byte    0,  -25, $57, $41
-               .byte  -12,  -17, $67, $01
-               .byte   -4,  -17, $68, $01
-               .byte    4,  -17, $67, $41
-               .byte  -12,   -9, $77, $01
-               .byte   -4,   -9, $68, $01
-               .byte    4,   -9, $77, $41
-               .byte   -4,  -28, $47, $80, 128
+sprite_cone:   .byte   -4,  -28, $47, $80
+               .byte   -4,  -33, $48, $02
+               .byte   -8,  -25, $57, $02
+               .byte    0,  -25, $57, $42
+               .byte  -12,  -17, $67, $02
+               .byte   -4,  -17, $68, $02
+               .byte    4,  -17, $67, $42
+               .byte  -12,   -9, $77, $02
+               .byte   -4,   -9, $68, $02
+               .byte    4,   -9, $77, $42, 128
 sprite_armu:   .byte    0,   -4, $39, $00
                .byte   -8,  -18, $18, $00
                .byte   -8,  -10, $28, $00
@@ -430,9 +434,9 @@ sprite_claw3d: .byte   -9,   19, $22, $80
                .byte   -9,   27, $12, $80, 128
 sprite_claw4d: .byte   -9,   19, $23, $C0
                .byte   -9,   27, $13, $C0, 128
-sprite_belt0:  .byte    0,   -1, $49, $03, 128
-sprite_belt1:  .byte    0,   -1, $4A, $03, 128
-sprite_belt2:  .byte    0,   -1, $4B, $03, 128
+sprite_belt0:  .byte    0,   -1, $49, $00, 128
+sprite_belt1:  .byte    0,   -1, $4A, $00, 128
+sprite_belt2:  .byte    0,   -1, $4B, $00, 128
 sprite_comp0a: .byte    0,   -1, $15, $00, 128
 sprite_comp1a: .byte    0,   -1, $16, $00, 128
 sprite_comp2a: .byte    0,   -1, $17, $00, 128
@@ -531,7 +535,7 @@ scrolled_sprite:
 		iny
 		iny
 		iny
-		jmp @next_tile
+		jmp @tile ; skip
 	:
 	; generate Y coordinate
 	lda (ptr), Y
@@ -548,10 +552,10 @@ scrolled_sprite:
 	adc sy+1
 	beq :+
 		lda #$FF
-		sta oam+0, X ; keep offscreen
+		sta oam+0, X ; keep offscreen in case not replaced
 		iny
 		iny
-		jmp @next_tile
+		jmp @tile ; skip
 	:
 	; tile
 	lda (ptr), Y
@@ -618,6 +622,10 @@ claw_anim_start:
 .byte claw_anim1 - claw_anim
 .byte claw_anim2 - claw_anim
 .byte claw_anim3 - claw_anim
+.byte claw_anim0 - claw_anim
+.byte claw_anim0 - claw_anim
+.byte claw_anim0 - claw_anim
+.byte claw_anim0 - claw_anim
 
 CLAW_SPEED = 7 ; frames per tick
 
@@ -652,19 +660,14 @@ claw_tick:
 		and claw_anim_pos
 		asl
 		and claw_anim_pos
-		and #$80
-		pha ; AND of high 4 bits = flip
+		and #$80 ; AND of high 4 bits = flip
+		eor claw_anim_wait
+		sta claw_anim_wait
 		lda claw_anim_pos
-		lsr
-		lsr
-		and claw_anim_pos ; AND of low 2+2 bits to favour 0
-		and #3
+		and #7
 		tax
 		lda claw_anim_start, X
 		sta claw_anim_pos
-		pla ; high bit of wait is flip
-		eor claw_anim_wait
-		sta claw_anim_wait
 	:
 	rts
 
@@ -1075,14 +1078,6 @@ belt_tick:
 	lda belt_x
 	cmp #72
 	bcc :+
-		lda item_y+0
-		clc
-		adc belt_y
-		sta item_y+0
-		lda item_y+1
-		clc
-		adc belt_y
-		sta item_y+1
 		lda #0
 		sta belt_x
 		sta belt_y
@@ -1142,10 +1137,161 @@ belt_draw:
 		bcc :- ; repeat until belt is offscreen
 	rts
 
+sprite_items_table:
+.word sprite_ballr
+.word sprite_bally
+.word sprite_box
+.word sprite_cone
+
+items_permute: ; so we can't get AA or ABA repetition
+.byte 3,1 ; 0,0 (impossible)
+.byte 2,3 ; 0,1
+.byte 1,3 ; 0,2
+.byte 1,2 ; 0,3
+.byte 2,3 ; 1,0
+.byte 0,2 ; 1,1 (impossible)
+.byte 0,3 ; 1,2
+.byte 0,2 ; 1,3
+.byte 1,3 ; 2,0
+.byte 0,3 ; 2,1
+.byte 1,3 ; 2,2 (impossible)
+.byte 0,1 ; 2,3
+.byte 1,2 ; 3,0
+.byte 0,2 ; 3,1
+.byte 0,1 ; 3,2
+.byte 2,0 ; 3,3 (impossible)
+
+items_init:
+	; place items offscreen
+	lda #2
+	.repeat ITEMS, I
+		sta item_xh+I
+	.endrepeat
+	jsr prng
+	sta item_next
+	jsr prng
+	sta item_last
+	rts
+
+item_tick: ; X = item
+	inc item_xl, X
+	bne :+
+		inc item_xh, X
+	:
+	lda item_time, X
+	tay
+	iny
+	cpy #3
+	bcc :+
+		inc item_y, X
+		ldy #0
+	:
+	tya
+	sta item_time, X
+	rts
+
+items_tick:
+	.repeat ITEMS, I
+		ldx #I
+		jsr item_tick
+	.endrepeat
+	; frames until next item appears
+	dec item_next
+	bne @finish
+	jsr prng
+	and #63
+	clc
+	adc #60
+	sta item_next
+	; find an empty item
+	ldx #0
+@find_empty:
+	lda item_xh, X
+	tay
+	iny ; -1 -> 0
+	cpy #3
+	bcs @found ; more than 1 screen past the edge
+	cpy #2
+	bne @next ; less than 1 screen past the edge
+	lda item_xl, X
+	cmp #24 ; 24 pixels past the screen = it's definitely gone
+	bcs @found
+@next:
+	inx
+	cpx #ITEMS
+	bcc @find_empty
+	; none found, just delay for a few frames and try again
+	jsr prng
+	and #31
+	clc
+	adc #15
+	sta item_next
+	rts
+@found:
+	; X = empty item
+	lda #0
+	sta item_time, X
+	sta item_y, X
+	lda #<-24
+	sta item_xl, X
+	lda #>-24
+	sta item_xh, X
+	; next item should not repeat either of last two
+	jsr prng
+	lsr
+	lda item_last
+	rol
+	and #%11111 ; two items ago (2-bit), one item ago (2-bit), random bit
+	tay
+	lda items_permute, Y
+	asl
+	sta item_spr, X
+	lsr
+	asl item_last
+	asl item_last
+	ora item_last
+	sta item_last
+@finish:
+	rts
+
+item_draw: ; X = item
+	lda item_xh, X
+	tay
+	iny
+	cpy #3
+	bcc :+
+		rts
+	:
+	sta sx+1
+	lda item_xl, X
+	sta sx+0
+	lda item_y, X
+	clc
+	adc #214-26
+	sta sy+0
+	lda #0
+	rol
+	sta sy+1
+	lda item_spr, X
+	tay
+	lda sprite_items_table+0, Y
+	sta ptr+0
+	lda sprite_items_table+1, Y
+	sta ptr+1
+	jmp scrolled_sprite
+
+items_draw:
+	.repeat ITEMS, I
+		ldx #I
+		jsr item_draw
+	.endrepeat
+	rts
+
 ; common animation
 
 common_init:
 	jsr prng_init
+	jsr items_init
 	jsr claw_init
 	jsr comp_init
 	jsr bricks_init
@@ -1154,11 +1300,14 @@ common_init:
 	rts
 
 common_tick:
-	lda sync
-	and #3
-	bne :+
-		inc ppu_scroll_y ; HACK test
-	:
+	;lda sync
+	;and #3
+	;bne :+
+	;	inc ppu_scroll_y ; HACK test
+	;:
+	lda #50
+	sta ppu_scroll_y ; HACK test
+	jsr items_tick
 	jsr claw_tick
 	jsr comp_tick
 	jsr bricks_tick
@@ -1169,14 +1318,15 @@ common_tick:
 	rts
 
 common_draw:
+	jsr bricks_draw ; not sprites
 	jsr sprite_begin
 	lda #0
 	sta sa ; clear sprite attribute xor
+	jsr items_draw
 	jsr claw_draw
 	jsr comp_draw
-	jsr bricks_draw
-	jsr stars_draw
 	jsr belt_draw
+	jsr stars_draw
 	jsr sprite_finish
 	rts
 
