@@ -26,7 +26,7 @@ ITEMS = 3
 
 info0: .asciiz "ART BY CARPETBONES"
 info1: .asciiz "CODE BY RAINWARRIOR"
-info2: .asciiz "PRODUCED BY DPC"
+info2: .asciiz "PRODUCED BY RETRODPC"
 
 .segment "CUSTOM_ZP" : zeropage
 ; probably don't want to add any more ZP burden
