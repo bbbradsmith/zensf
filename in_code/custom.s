@@ -1712,7 +1712,6 @@ menu_tracks_to_play:
 	sta time_d3
 	sta repaint
 @loop:
-	; scroll up TODO clear title, replace it
 	lda ppu_scroll_y
 	cmp #(PLAY_SCROLL+1)
 	bcc :+
@@ -1766,7 +1765,6 @@ menu_play_tick:
 	jmp common_tick
 
 menu_play_draw:
-	; TODO update track continually?
 	jsr common_draw_begin
 	jsr clock_on_draw
 	lda nsf_playing
