@@ -187,7 +187,8 @@ base_nmi:
 	jmp base_unbanks
 
 base_ramp_play:
-	lda #0
+	lda ppu_ctrl
+	and #%01111111
 	sta $2000 ; disable NMI (NMI has to restore BASE banks, will interfere with INIT)
 	jsr base_unbanks
 	jsr ramp_play
