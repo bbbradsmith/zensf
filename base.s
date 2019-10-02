@@ -614,6 +614,9 @@ ppu_on:
 	sta ppu_mask
 	;jmp ppu_update
 ppu_update:
+	;lda ppu_mask ; profile
+	;ora #1       ; profile
+	;sta $2001    ; profile
 	lda #1
 	sta nmi_ready
 	;jmp ppu_skip

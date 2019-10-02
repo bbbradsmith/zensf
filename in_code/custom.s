@@ -1,6 +1,6 @@
 ; custom.s
 ;
-; A basic set of menus to demonstrate how to implement them on top of the base layer.
+; Modified for PICO2 project.
 ;
 ;
 ; https://github.com/bbbradsmith/zensf
@@ -341,11 +341,6 @@ rainbow17:
 
 ; sprites
 
-.macro SPRITE addr
-	LOAD_PTR addr
-	jsr sprite
-.endmacro
-
 ; sprite definitions:  [x     y tile attr] 128=end
 
 sprite_ballr:  .byte  -12,  -25, $40, $00
@@ -449,15 +444,30 @@ sprite_num8:   .byte    0,   -1, $08, $02, 128
 sprite_num9:   .byte    0,   -1, $09, $02, 128
 sprite_colon:  .byte    0,   -1, $0A, $02, 128
 sprite_play:   .byte    0,   -1, $0B, $01, 128
-sprite_loop:   .byte    0,   -1, $0C, $00, 128
+sprite_loop:   .byte    0,   -1, $0C, $01, 128
 sprite_pause:  .byte    0,   -1, $0D, $01, 128
 sprite_dash:   .byte    0,   -1, $0E, $02, 128
 
-sprite_tracks: .byte    0,   -1, $30, $03
-               .byte    8,   -1, $31, $03
-               .byte   16,   -1, $32, $03
-               .byte   24,   -1, $33, $03
-               .byte   32,   -1, $34, $03, 128
+sprite_track0: .byte    0,   -1, $3B, $00
+               .byte    8,   -1, $3C, $00
+               .byte   16,   -1, $3D, $00
+               .byte   24,   -1, $3E, $00
+               .byte   32,   -1, $3F, $00, 128
+sprite_track1: .byte    0,   -1, $30, $01
+               .byte    8,   -1, $31, $01
+               .byte   16,   -1, $32, $01
+               .byte   24,   -1, $33, $01
+               .byte   32,   -1, $34, $01, 128
+sprite_track2: .byte    0,   -1, $30, $02
+               .byte    8,   -1, $31, $02
+               .byte   16,   -1, $32, $02
+               .byte   24,   -1, $33, $02
+               .byte   32,   -1, $34, $02, 128
+sprite_track3: .byte    0,   -1, $3B, $03
+               .byte    8,   -1, $3C, $03
+               .byte   16,   -1, $3D, $03
+               .byte   24,   -1, $3E, $03
+               .byte   32,   -1, $3F, $03, 128
 
 sprite_num_table:
 .word sprite_num0
@@ -1460,6 +1470,12 @@ menu_tracks_tick:
 	sta track_x
 	jmp common_tick
 
+sprite_track_table:
+.word sprite_track0
+.word sprite_track1
+.word sprite_track2
+.word sprite_track3
+
 menu_tracks_draw:
 	; update artist (this will be preempted by bricks 1 in 4 times)
 	LOAD_NMT ($2800+4+(19*32))
@@ -1478,7 +1494,17 @@ menu_tracks_draw:
 	stx nmt_count
 	; sprites (+ bricks)
 	jsr common_draw_begin
-	; track select sprite
+	; track select sprite (cycle through 4 colours)
+	lda sync
+	lsr
+	lsr
+	and #3
+	asl
+	tax
+	lda sprite_track_table+0, X
+	sta ptr+0
+	lda sprite_track_table+1, X
+	sta ptr+1
 	lda track
 	asl
 	asl
@@ -1487,9 +1513,7 @@ menu_tracks_draw:
 	adc #(12*8)+(208-TRACKS_SCROLL)
 	tay
 	ldx track_x
-	SPRITE sprite_tracks ; TODO we could do 3 colours of this maybe?
-	; change tiles to use color 1 and cycle 0,1,2?
-	; scrolled_sprite has sa, but it can't wrap the screen :(
+	jsr sprite
 	; other sprites
 	jsr clock_off_draw
 	jsr common_draw
@@ -1682,6 +1706,10 @@ paint_play_to_tracks:
 menu_tracks_to_play:
 	lda #0
 	sta sfx_on
+	sta time_d0
+	sta time_d1
+	sta time_d2
+	sta time_d3
 	sta repaint
 @loop:
 	; scroll up TODO clear title, replace it
@@ -1705,16 +1733,7 @@ menu_tracks_to_play:
 		jsr ppu_update
 		jmp @loop
 	:
-	; TODO
-	;jmp menu_play
-	: ; HACK
-		jsr gamepad_poll_new
-		and #(PAD_SELECT)
-		bne menu_play_to_tracks
-		jsr menu_play_tick
-		jsr menu_play_draw
-		jsr ppu_update
-		jmp :-
+	jmp menu_play
 
 menu_play_to_tracks:
 	lda #0
@@ -1835,27 +1854,15 @@ menu_play_draw:
 @finish:
 	rts
 
-; TODO implement menu_play
-
 menu_play:
-	LOAD_NMT ($2000+6+(6*32))
-	lda track
-	jsr load_track_artist
-	jsr ppu_string
-	LOAD_NMT ($2000+6+(8*32))
-	lda track
-	jsr load_track_title
-	jsr ppu_string
 	jsr menu_play_restart_
-	jsr menu_play_draw
-	jsr ffade_in
 @loop:
 	jsr gamepad_poll_new
 	;lda gamepad_new
 	and #(PAD_SELECT)
 	beq :+
 		jsr menu_play_stop_
-		jmp menu_tracks
+		jmp menu_play_to_tracks
 	:
 	lda gamepad_new
 	and #(PAD_B)
@@ -1943,6 +1950,7 @@ menu_play:
 		jmp menu_play
 	:
 	; redraw and go to next frame
+	jsr menu_play_tick
 	jsr menu_play_draw
 	jsr ppu_update
 	jmp @loop
@@ -1952,7 +1960,7 @@ menu_play_stop_:
 	lda #$00
 	sta nsf_playing
 	sta $4015
-	jmp ffade_out
+	rts
 
 menu_play_restart_:
 	lda #0
