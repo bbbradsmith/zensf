@@ -36,6 +36,8 @@
 .import custom_nmi
 .import seed ; preserve random seed across resets
 .import custom_nmt_update
+.export art_prepare_ ; normally internal, but custom.s uses it for this project
+.export screen_table ; ditto
 
 .export base_nmi
 .export base_banks
@@ -694,6 +696,7 @@ sprite_begin:
 
 sprite_finish:
 	ldx oam_pos
+	beq :++
 	lda #$FF
 	:
 		sta oam+0, X
@@ -702,6 +705,7 @@ sprite_finish:
 		inx
 		inx
 		bne :-
+	:
 	rts
 
 sprite:

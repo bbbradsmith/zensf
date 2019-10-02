@@ -7,7 +7,7 @@
 "original7.nsf" 1 2:43 2 0 "Lukas Eriksson" "Dig Deep or Drown"
 "original8.nsf" 1 2:48 2 0 "Airwe 阿威" "永远的阳台"
 "original9.nsf" 1 0:50 2 0 "keffie" "bazaar chase / (galliard for noodle)" "bazaar chase..."
-"Entry010.nsf"  1 2:38 2 1 "dusthillguy" "Jarski is a really great guy / Jarski は本当に良い奴だ" "Jarski..."
+"Entry010.nsf"  1 2:38 2 1 "dusthillguy" "Jarski is a really great guy / JARSKIは本当に良い奴だ" "Jarski..."
 #"Entry054.nsf"  1 3:08 2 0 "kulor" "The Recovery"
 
 ALLCAPS

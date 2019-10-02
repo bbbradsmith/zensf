@@ -13,6 +13,8 @@
 .export custom_nmi
 .export custom_nmt_update
 .export seed
+.import art_prepare_ ; base.s
+.import screen_table
 
 .import nsf_playing ; ramp.s
 
@@ -61,6 +63,7 @@ item_time:      .res ITEMS
 item_next:      .res 1
 item_last:      .res 1
 track_x:        .res 1
+repaint:        .res 1
 
 ; sfx
 sfx__lda_abs_y: .res 1
@@ -343,13 +346,6 @@ rainbow17:
 	jsr sprite
 .endmacro
 
-.macro SPRITEXY addr, x_, y_
-	LOAD_PTR addr
-	ldx #x_
-	ldy #y_
-	jsr sprite
-.endmacro
-
 ; sprite definitions:  [x     y tile attr] 128=end
 
 sprite_ballr:  .byte  -12,  -25, $40, $00
@@ -440,20 +436,22 @@ sprite_comp2b: .byte    0,   -2, $27, $00, 128
 sprite_star0:  .byte    0,   -1, $35, $00, 128
 sprite_star1:  .byte    0,   -1, $36, $00, 128
 sprite_star2:  .byte    0,   -1, $37, $00, 128
-sprite_num0:   .byte    0,   -1, $00, $00, 128
-sprite_num1:   .byte    0,   -1, $01, $00, 128
-sprite_num2:   .byte    0,   -1, $02, $00, 128
-sprite_num3:   .byte    0,   -1, $03, $00, 128
-sprite_num4:   .byte    0,   -1, $04, $00, 128
-sprite_num5:   .byte    0,   -1, $05, $00, 128
-sprite_num6:   .byte    0,   -1, $06, $00, 128
-sprite_num7:   .byte    0,   -1, $07, $00, 128
-sprite_num8:   .byte    0,   -1, $08, $00, 128
-sprite_num9:   .byte    0,   -1, $09, $00, 128
-sprite_colon:  .byte    0,   -1, $0A, $00, 128
-sprite_play:   .byte    0,   -1, $0B, $00, 128
+
+sprite_num0:   .byte    0,   -1, $00, $02, 128
+sprite_num1:   .byte    0,   -1, $01, $02, 128
+sprite_num2:   .byte    0,   -1, $02, $02, 128
+sprite_num3:   .byte    0,   -1, $03, $02, 128
+sprite_num4:   .byte    0,   -1, $04, $02, 128
+sprite_num5:   .byte    0,   -1, $05, $02, 128
+sprite_num6:   .byte    0,   -1, $06, $02, 128
+sprite_num7:   .byte    0,   -1, $07, $02, 128
+sprite_num8:   .byte    0,   -1, $08, $02, 128
+sprite_num9:   .byte    0,   -1, $09, $02, 128
+sprite_colon:  .byte    0,   -1, $0A, $02, 128
+sprite_play:   .byte    0,   -1, $0B, $01, 128
 sprite_loop:   .byte    0,   -1, $0C, $00, 128
-sprite_pause:  .byte    0,   -1, $0D, $00, 128
+sprite_pause:  .byte    0,   -1, $0D, $01, 128
+sprite_dash:   .byte    0,   -1, $0E, $02, 128
 
 sprite_tracks: .byte    0,   -1, $30, $03
                .byte    8,   -1, $31, $03
@@ -1275,6 +1273,37 @@ items_draw:
 	.endrepeat
 	rts
 
+; clock
+
+.macro SPRITENUM num, x_, y_
+	lda num
+	jsr load_sprite_num
+	lda #x_
+	sta sx+0
+	lda #y_
+	sta sy+0
+	lda #0
+	sta sx+1
+	sta sy+1
+	jsr scrolled_sprite
+.endmacro
+
+clock_off_draw:
+	;SCROLLED_SPRITE     84,  128, sprite_dash
+	;SCROLLED_SPRITE     92,  130, sprite_dash
+	SCROLLED_SPRITE    100,  133, sprite_colon
+	;SCROLLED_SPRITE    107,  136, sprite_dash
+	;SCROLLED_SPRITE    115,  138, sprite_dash
+	rts
+
+clock_on_draw:
+	SPRITENUM time_d3,  84,  128
+	SPRITENUM time_d2,  92,  130
+	SCROLLED_SPRITE    100,  133, sprite_colon
+	SPRITENUM time_d1, 107,  136
+	SPRITENUM time_d0, 115,  138
+	rts
+
 ; common animation
 
 common_init:
@@ -1370,6 +1399,7 @@ menu_title_tick:
 
 menu_title_draw:
 	jsr common_draw_begin
+	jsr clock_off_draw
 	jsr common_draw
 	jmp common_draw_end
 
@@ -1387,13 +1417,14 @@ menu_title:
 	jmp menu_title
 
 TRACKS_SCROLL = 208
+TRACKS_SCROLL_SPEED = 13 ; 208/16
 
 menu_title_to_tracks:
 	lda ppu_scroll_y
 	cmp #TRACKS_SCROLL
 	bcs :+
 		clc
-		adc #8
+		adc #TRACKS_SCROLL_SPEED
 		sta ppu_scroll_y
 		jsr menu_title_tick
 		jsr menu_title_draw
@@ -1413,7 +1444,7 @@ menu_tracks_to_title:
 	lda ppu_scroll_y
 	beq :+
 		sec
-		sbc #8
+		sbc #TRACKS_SCROLL_SPEED
 		sta ppu_scroll_y
 		jsr menu_title_tick
 		jsr menu_title_draw
@@ -1460,6 +1491,7 @@ menu_tracks_draw:
 	; change tiles to use color 1 and cycle 0,1,2?
 	; scrolled_sprite has sa, but it can't wrap the screen :(
 	; other sprites
+	jsr clock_off_draw
 	jsr common_draw
 	jmp common_draw_end
 
@@ -1493,46 +1525,231 @@ menu_tracks:
 	beq :+
 		lda #1
 		sta nsf_looping
-		jmp menu_tracks_play
+		jmp menu_tracks_to_play
 	:
 	lda gamepad_new
 	and #(PAD_A | PAD_START)
 	beq :+
 		lda #0
 		sta nsf_looping
-		jmp menu_tracks_play
+		jmp menu_tracks_to_play
 	:
 	jsr menu_tracks_tick
 	jsr menu_tracks_draw
 	jsr ppu_update
 	jmp menu_tracks
 
-menu_tracks_play: ; TODO transition
-	jsr ffade_out
+PLAY_SCROLL = 24
+PLAY_SCROLL_SPEED_A = 11
+PLAY_SCROLL_SPEED_B = 12 ; 11+12 = 23 = (204-24)/8
+
+zeros:
+.repeat 22
+	.byte 0
+.endrepeat
+
+tracks_attrib:
+.repeat 8
+	.byte %00000101
+.endrepeat
+
+paint_addr_t2p:
+.word $2153
+.word $2133
+.word $210A
+.word $23C8
+.word $2065
+.word $2085
+
+paint_data_t2p:
+.word zeros
+.word zeros
+.word zeros
+.word tracks_attrib
+.word zeros
+.word zeros
+
+paint_len_t2p:
+.byte 3
+.byte 3
+.byte 12
+.byte 8
+.byte 22
+.byte 22
+
+PAINT_LEN_T2P_COUNT = 6
+
+paint_addr_p2t:
+.word $2000
+.word $2060
+.word $2080
+.word $20A0
+.word $20C0
+.word $20E0
+.word $2100
+.word $2120
+.word $2140
+.word $23C0
+
+paint_len_p2t:
+.byte 0 ; dummy to let first line scroll off first
+.byte 32
+.byte 32
+.byte 32
+.byte 32
+.byte 32
+.byte 32
+.byte 32
+.byte 24 ; avoid brick
+.byte 32
+
+PAINT_LEN_P2T_COUNT = 10
+
+paint_tracks_to_play:
+	lda sync
+	and #3
+	beq @finish ; bricks instead
+	ldx repaint
+	cpx #PAINT_LEN_T2P_COUNT
+	bcs @finish
+	lda paint_len_t2p, X
+	sta nmt_count
+	txa
+	asl
+	tax
+	lda paint_addr_t2p+0, X
+	sta nmt_addr+0
+	lda paint_addr_t2p+1, X
+	sta nmt_addr+1
+	lda paint_data_t2p+0, X
+	sta ptr+0
+	lda paint_data_t2p+1, X
+	sta ptr+1
+	ldy #0
+	:
+		lda (ptr), Y
+		sta nmt_buffer, Y
+		iny
+		cpy nmt_count
+		bcc :-
+	inc repaint
+@finish:
+	rts
+
+paint_play_to_tracks:
+	lda sync
+	and #3
+	beq @finish ; bricks instead
+	ldx repaint
+	cpx #PAINT_LEN_P2T_COUNT
+	bcc :+
+		lda #0
+		sta nmt_count ; block art/track title updates
+		rts
+	:
+	lda paint_len_p2t, X
+	sta nmt_count
+	txa
+	asl
+	tax
+	lda paint_addr_p2t+0, X
+	sta nmt_addr+0
+	lda paint_addr_p2t+1, X
+	sta nmt_addr+1
+	; load data from original upper nametable
+	ldx #SCREEN_Upper
+	lda screen_table+0, X
+	jsr art_prepare_ ; ptr = nametable data source
+	lda nmt_addr+0
+	clc
+	adc ptr+0
+	sta ptr+0
+	lda nmt_addr+1
+	and #$0F
+	adc ptr+1
+	sta ptr+1
+	ldy #0
+	:
+		lda (ptr), Y
+		sta nmt_buffer, Y
+		iny
+		cpy nmt_count
+		bcc :-
+	inc repaint
+@finish:
+	rts
+
+menu_tracks_to_play:
 	lda #0
 	sta sfx_on
-	jmp menu_play
+	sta repaint
+@loop:
+	; scroll up TODO clear title, replace it
+	lda ppu_scroll_y
+	cmp #(PLAY_SCROLL+1)
+	bcc :+
+		sec
+		sbc #PLAY_SCROLL_SPEED_A
+		sta ppu_scroll_y
+		jsr menu_play_tick
+		jsr menu_play_draw
+		jsr paint_tracks_to_play
+		jsr ppu_update
+		lda ppu_scroll_y
+		sec
+		sbc #PLAY_SCROLL_SPEED_B
+		sta ppu_scroll_y
+		jsr menu_play_tick
+		jsr menu_play_draw
+		jsr paint_tracks_to_play
+		jsr ppu_update
+		jmp @loop
+	:
+	; TODO
+	;jmp menu_play
+	: ; HACK
+		jsr gamepad_poll_new
+		and #(PAD_SELECT)
+		bne menu_play_to_tracks
+		jsr menu_play_tick
+		jsr menu_play_draw
+		jsr ppu_update
+		jmp :-
 
-; TODO need a transition back and forth
-; clear the FAMICOMPO PICO 2 from the top and scroll up (probably not all the way)
-; with the track title (multiline) and the playback icon
-; transition back should scroll down then restore FAMICOMPO PICO 2
+menu_play_to_tracks:
+	lda #0
+	sta sfx_on
+	sta repaint
+@loop:
+	lda ppu_scroll_y
+	cmp #TRACKS_SCROLL
+	bcs :+
+		clc
+		adc #PLAY_SCROLL_SPEED_A
+		sta ppu_scroll_y
+		jsr menu_play_tick
+		jsr menu_play_draw
+		jsr paint_play_to_tracks
+		jsr ppu_update
+		lda ppu_scroll_y
+		clc
+		adc #PLAY_SCROLL_SPEED_B
+		sta ppu_scroll_y
+		jsr menu_play_tick
+		jsr menu_play_draw
+		jsr paint_play_to_tracks
+		jsr ppu_update
+		jmp @loop
+	:
+	jmp menu_tracks
 
-.macro SPRITENUM num, x_, y_
-	lda num
-	jsr load_sprite_num
-	ldx #x_
-	ldy #y_
-	jsr sprite
-.endmacro
+menu_play_tick:
+	jmp common_tick
 
-menu_play_redraw:
-	jsr sprite_begin
-	SPRITENUM time_d0, 140, 144
-	SPRITENUM time_d1, 132, 144
-	SPRITENUM time_d2, 116, 144
-	SPRITENUM time_d3, 108, 144
-	SPRITEXY sprite_colon, 124, 144
+menu_play_draw:
+	; TODO update track continually?
+	jsr common_draw_begin
+	jsr clock_on_draw
 	lda nsf_playing
 	bne :+
 		LOAD_PTR sprite_pause
@@ -1546,11 +1763,79 @@ menu_play_redraw:
 		LOAD_PTR sprite_play
 	;
 @mode:
-	ldx #124
-	ldy #156
-	jsr sprite
-	jsr sprite_finish
-	jmp rainbow17
+	lda #103
+	sta sx+0
+	lda #101
+	sta sy+0
+	lda #0
+	sta sx+1
+	sta sy+1
+	jsr scrolled_sprite
+	jsr common_draw
+	jsr common_draw_end
+	; reload track titles
+	lda sync
+	and #3
+	beq @finish ; don't block bricks
+	cmp #3
+	bcs @finish ; nothing on tick 3
+	cmp #2
+	bcs @track
+@arist:
+	LOAD_NMT $20A2
+	lda track
+	jsr load_track_artist
+	jsr ppu_string_buffer
+	lda #0
+	ldx nmt_count
+	:
+		sta nmt_buffer, X
+		inx
+		cpx #32
+		bcc :-
+	stx nmt_count
+	jmp @finish
+@track:
+	LOAD_NMT $20C2
+	lda track
+	jsr load_track_title
+	ldx #0
+	ldy #0
+	:
+		lda (ptr), Y
+		beq @track_finish
+		iny
+		cmp #'\'
+		beq :+
+		sta nmt_buffer, X
+		inx
+		jmp :-
+	:
+	lda #0
+	:
+		sta nmt_buffer, X
+		inx
+		cpx #32
+		bcc :-
+	:
+		lda (ptr), Y
+		beq @track_finish
+		iny
+		sta nmt_buffer, X
+		inx
+		jmp :-
+@track_finish:
+	lda #0
+	:
+		sta nmt_buffer, X
+		inx
+		cpx #64
+		bcc :-
+	stx nmt_count
+@finish:
+	rts
+
+; TODO implement menu_play
 
 menu_play:
 	LOAD_NMT ($2000+6+(6*32))
@@ -1562,7 +1847,7 @@ menu_play:
 	jsr load_track_title
 	jsr ppu_string
 	jsr menu_play_restart_
-	jsr menu_play_redraw
+	jsr menu_play_draw
 	jsr ffade_in
 @loop:
 	jsr gamepad_poll_new
@@ -1658,7 +1943,7 @@ menu_play:
 		jmp menu_play
 	:
 	; redraw and go to next frame
-	jsr menu_play_redraw
+	jsr menu_play_draw
 	jsr ppu_update
 	jmp @loop
 
