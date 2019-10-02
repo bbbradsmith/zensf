@@ -695,6 +695,7 @@ sprite_begin:
 
 sprite_finish:
 	ldx oam_pos
+	beq :++
 	lda #$FF
 	:
 		sta oam+0, X
@@ -703,6 +704,7 @@ sprite_finish:
 		inx
 		inx
 		bne :-
+	:
 	rts
 
 sprite:
