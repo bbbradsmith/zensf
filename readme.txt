@@ -6,9 +6,9 @@ For information about the code, please see the ZENSF documentation.
 
 Compare this branch with the main branch. Concise list of changes:
 * Input NSF tracks and art.
-* **custom.s** is significantly modified from the example.
-* **base.s** is slightly modified.
-* **out_mod/** contains the modified disassemblies for the input tracks.
+* custom.s is significantly modified from the example.
+* base.s is slightly modified.
+* out_mod/ contains the modified disassemblies for the input tracks.
 
 Contemporary main branch:
 
