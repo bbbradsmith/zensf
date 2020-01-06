@@ -455,7 +455,7 @@ highest_ram = 0
 lowest_stack = 0x1FF
 for (nsf_filename, nsf_song, nsf_min, nsf_sec, nsf_pal_adjust, nsf_loop, nsf_artist, nsf_title, nsf_title_short) in entries:
     # parse the file
-    s_track = ("File %d: " % (track+1)) + nsf_filename
+    s_track = ("File %d: " % track) + nsf_filename
     print(s_track)
     result += s_track + "\n"
     nsf = NSF.open(nsf_filename)
@@ -467,7 +467,7 @@ for (nsf_filename, nsf_song, nsf_min, nsf_sec, nsf_pal_adjust, nsf_loop, nsf_art
         frames = 5
     mmu = run_nsf(nsf,nsf_song,frames)
     # analysis
-    mod  = "Track %02d: %s\n" % (track+1,nsf_title)
+    mod  = "Track %02d: %s\n" % (track,nsf_title)
     mod += "High ZP:    $%02X\n" % mmu.stat_highzp
     mod += "High RAM: $%04X\n" % mmu.stat_highram
     if mmu.stat_exram != False:
