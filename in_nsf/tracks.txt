@@ -1,16 +1,16 @@
-"brahms.nsf"       2 05:09 0 0 "Johannes Brahms" "Intermezzo (E minor)\Op. 119 No. 2" "Intermezzo 119-2"
-"debussy.nsf"      1 03:03 1 0 "Claude Debussy" "Prélude"
-"brahms.nsf"       1 02:50 0 0 "Johannes Brahms" "Intermezzo (A minor)\Op. 76 No. 7" "Intermezzo 76-7"
-"debussy.nsf"      2 03:08 1 0 "Claude Debussy" "Menuet"
-"debussy.nsf"      4 03:33 1 0 "Claude Debussy" "Passepied"
-"sundried.nsf"     1 01:44 2 1 "bradsmith" "Sundried"
-"debussy.nsf"      3 03:26 1 0 "Claude Debussy" "Clair de Lune"
+"Entry007_fix.nsf"     1 01:01 0 1 "hydden"                                           "S-sound Etude 1"
+"Entry009.nsf"         1 02:24 0 0 "Xenon Odyssey"                                    "Copacetic"
+"Entry011_fix.nsf"     1 01:09 0 1 "hydden"                                           "S-sound Etude 2"
+"Entry018.nsf"         1 01:18 0 1 "houzatosis"                                       "Allercinogens"
+"Entry020.nsf"         1 01:55 0 1 "Tobikomi"                                         "6502 Days"
+"Entry022.nsf"         1 02:22 0 0 "Bun"            "A little dance of small DPCM's"  "A little dance..."
+"Entry028.nsf"         1 02:13 0 0 "MiniMacro"                                        "Business as Usual"
+"Entry029.nsf"         1 04:14 0 0 "OffGao"                                           "HEI-SEI Last Run"
+"Entry036.nsf"         1 02:03 0 0 "Nabec"                                            "Garlic Heart"
+"Entry043_fix.nsf"     1 03:07 0 0 "TQ-Jam"                                           "Ammo"
 
-ORDER 2 4 7 5 6 3 1
-# ALLCAPS
-MAP "é" "|"
-GAP 2
-RESERVE $C0
+ORDER 4 3 2 5 7 6 9 1 8 10
+RESERVE $100
 
 # [NSF filename] [song] [mm:ss] [0-2=PAL method] [0/1=loop] [arist] [track name] [shortened track name (optional)]
 #   Fields are separated by spaces, use enclosing quotes for fields that require internal spaces (e.g. track names)

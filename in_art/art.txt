@@ -3,9 +3,9 @@ SCREEN Info    info.nam    bg.chr  fg.chr  bg.pal  fg.pal
 SCREEN Tracks  tracks.nam  bg.chr  fg.chr  bg.pal  fg.pal
 SCREEN Play    play.nam    bg.chr  fg.chr  bg.pal  fg.pal
 
-ZP $80
+ZP $C0
 RAM $500
-BANKS 32
+BANKS 64
 
 NSF_TITLE "ZENSF Test"
 NSF_ARTIST "bradsmith"
