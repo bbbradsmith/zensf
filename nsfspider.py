@@ -157,7 +157,7 @@ class NSFSpiderMMU:
             else:
                 self.stat_bank_write.add((-1,self.pc)) # bank write from RAM
         if (b == 7):
-            if v < 0xFF:
+            if v < self.nsf.bank_end:
                 self.stat_bank_f.add(v)
             if ranged and (v > self.nsf.bank_end):
                 raise Exception("Bank F (%d) outside file range. Pad NSF with zeros to fill this bank." % v)
