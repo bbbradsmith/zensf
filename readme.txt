@@ -28,7 +28,7 @@ Instructions:
     2.2.4. out_info/modlist.txt - list of detected modifications to be done
     2.2.5. out_info/tracks.inc - track data tables
     2.2.6. out_info/nsfe.inc - NSFe data tables
-    2.2.7. out_info/nsfspider_result.txt - diagnostic output
+    2.2.7. out_info/nsfspider.txt - diagnostic output
   Note: this may take a few minutes to analyze the NSFs.
     In nsfspider.py, debug_track_skip can be used for faster iteration.
     All of the data will still be valid, but it will fail to identify some mods:
@@ -44,7 +44,9 @@ Instructions:
     3.2.2. Any bankswitch write needs to be replaced (sta $5FFB -> jsr sta_5FFB, etc.)
     3.2.3. A bankswitch from bank "$-1" means it came from RAM. This has to be resolved with manual debugging.
     3.2.4. If ZP or RAM usage is too high you will probably need to patch the NSF directly to fix this.
-           Some engines with this problem merely clear RAM during INIT, so this can just be replaced with NOP.
+           Some engines with this problem merely clear RAM during INIT, so this can just be replaced with NOP,
+           and after patching the NSF re-running nsfpider will find the true RAM usage instead.
+           (The disassemble_all option in nsfspider.py may assist in locating the memory clear code.)
            The RESERVE option is to accomodate engines (e.g. OFGS) that use the high bytes of ZP,
            ZENSF's ZP usage will be in the middle between ZP (in_art/art.txt) and RESERVE (in_nsf/tracks.txt).
   3.3. Any extra banks needed can be manually added to binlist.txt
