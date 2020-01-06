@@ -35,6 +35,7 @@ import py65emu.cpu
 
 debug_track_skip = 0 # skips the full play/analysis of tracks below this number for faster iteration (if you don't need the mod info)
 delete_output = True # delete output files before beginning
+disassemble_all = False # may be useful for other patching
 
 in_dir = "in_nsf"
 in_list = "tracks.txt"
@@ -148,15 +149,17 @@ class NSFSpiderMMU:
 
     def bank(self,b,v,ranged=True):
         #debug("bank: %d, %d" % (b,v))
+        self.bank_addr[v] = 0x8000 | (b * 0x1000)
         if self.pc >= 0:
             if self.pc >= 0x8000:
                 pcb = (self.pc >> 12) - 0x8
                 self.stat_bank_write.add((self.banks[pcb],self.pc)) # bank write from ROM
             else:
                 self.stat_bank_write.add((-1,self.pc)) # bank write from RAM
-        if (b == 7) and ranged:
-            self.stat_bank_f.add(v)
-            if (v > self.nsf.bank_end):
+        if (b == 7):
+            if v < 0xFF:
+                self.stat_bank_f.add(v)
+            if ranged and (v > self.nsf.bank_end):
                 raise Exception("Bank F (%d) outside file range. Pad NSF with zeros to fill this bank." % v)
         self.banks[b] = v * 0x1000
 
@@ -171,6 +174,7 @@ class NSFSpiderMMU:
         self.ram = [0] * 0x800
         self.exram = [0] * 0x2000
         self.banks = [0] * 8
+        self.bank_addr = {}
         self.stat_bank_f = set()
         self.stat_bank_write = set()
         start_banks = self.nsf.banks[:]
@@ -451,7 +455,7 @@ highest_ram = 0
 lowest_stack = 0x1FF
 for (nsf_filename, nsf_song, nsf_min, nsf_sec, nsf_pal_adjust, nsf_loop, nsf_artist, nsf_title, nsf_title_short) in entries:
     # parse the file
-    s_track = ("File %d: " % track) + nsf_filename
+    s_track = ("File %d: " % (track+1)) + nsf_filename
     print(s_track)
     result += s_track + "\n"
     nsf = NSF.open(nsf_filename)
@@ -463,7 +467,7 @@ for (nsf_filename, nsf_song, nsf_min, nsf_sec, nsf_pal_adjust, nsf_loop, nsf_art
         frames = 5
     mmu = run_nsf(nsf,nsf_song,frames)
     # analysis
-    mod  = "Track %02d: %s\n" % (track,nsf_title)
+    mod  = "Track %02d: %s\n" % (track+1,nsf_title)
     mod += "High ZP:    $%02X\n" % mmu.stat_highzp
     mod += "High RAM: $%04X\n" % mmu.stat_highram
     if mmu.stat_exram != False:
@@ -546,6 +550,11 @@ for track in range(len(analyzed)):
                     addr = pca
                 elif pca != addr:
                     raise Exception("Bank modification needed in two places! " + bname)
+        if addr < 0 and disassemble_all:
+            if b in mmu.bank_addr:
+                addr = mmu.bank_addr[b]
+            else:
+                addr = 0x8000
         # split the banks
         bfile = os.path.join(out_dir_bin,bname+".bin")
         if not reuse:
