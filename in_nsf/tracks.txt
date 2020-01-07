@@ -1,16 +1,29 @@
-"Entry007_fix.nsf"     1 01:01 0 1 "hydden"                                           "S-sound Etude 1"
-"Entry009.nsf"         1 02:24 0 0 "Xenon Odyssey"                                    "Copacetic"
-"Entry011_fix.nsf"     1 01:09 0 1 "hydden"                                           "S-sound Etude 2"
-"Entry018.nsf"         1 01:18 0 1 "houzatosis"                                       "Allercinogens"
-"Entry020.nsf"         1 01:55 0 1 "Tobikomi"                                         "6502 Days"
-"Entry022.nsf"         1 02:22 0 0 "Bun"            "A little dance of small DPCM's"  "A little dance..."
-"Entry028.nsf"         1 02:13 0 0 "MiniMacro"                                        "Business as Usual"
-"Entry029.nsf"         1 04:14 0 0 "OffGao"                                           "HEI-SEI Last Run"
-"Entry036.nsf"         1 02:03 0 0 "Nabec"                                            "Garlic Heart"
-"Entry043_fix.nsf"     1 03:07 0 0 "TQ-Jam"                                           "Ammo"
+"Entry007_fix.nsf"     1 01:01 1 1 "hydden"                                           "S-sound Etude 1"
+"Entry009.nsf"         1 02:24 2 0 "Xenon Odyssey"                                    "Copacetic"
+"Entry011_fix.nsf"     1 01:09 1 1 "hydden"                                           "S-sound Etude 2"
+"Entry018.nsf"         1 01:18 2 1 "houzatosis"                                       "Allercinogens"
+"Entry020.nsf"         1 01:55 2 1 "Tobikomi"                                         "6502 Days"
+"Entry022.nsf"         1 02:22 2 0 "Bun"            "A little dance\of small DPCM's"  "A little dance..."
+"Entry028.nsf"         1 02:13 2 0 "MiniMacro"                                        "Business as Usual"
+"Entry029.nsf"         1 04:14 1 0 "OffGao"                                           "HEI-SEI Last Run"
+"Entry036.nsf"         1 02:03 2 0 "Nabec"                                            "Garlic Heart"
+"Entry043_fix.nsf"     1 03:07 1 0 "TQ-Jam"                                           "Ammo"
 
 ORDER 4 3 2 5 7 6 9 1 8 10
 RESERVE $100
+
+# NSF drivers:
+#  007 NSDL
+#  009 Famitracker
+#  011 NSDL
+#  018 Famitracker
+#  020 Famitracker
+#  022 Famitracker
+#  028 Famitracker
+#  029 OFGS
+#  036 Famitracker
+#  032 MCK
+
 
 # [NSF filename] [song] [mm:ss] [0-2=PAL method] [0/1=loop] [arist] [track name] [shortened track name (optional)]
 #   Fields are separated by spaces, use enclosing quotes for fields that require internal spaces (e.g. track names)
